@@ -1,14 +1,12 @@
-import * as mongoDB from "mongodb";
-import * as dotenv from "dotenv";
+// services/database.service.ts
+import mongoose from 'mongoose';
+import * as dotenv from 'dotenv';
 
 export async function connectToDatabase() {
-    dotenv.config();
-
-    const client: mongoDB.MongoClient = new mongoDB.MongoClient(process.env.DB_CONN_STRING);
-
-    await client.connect();
-
-    console.log("Succesfully connected to MongoDB Atlas");
-
-    return client;
+  dotenv.config();
+  
+  await mongoose.connect(process.env.DB_CONN_STRING!);
+  console.log('Conectado a MongoDB Atlas');
+  
+  return mongoose.connection;
 }
