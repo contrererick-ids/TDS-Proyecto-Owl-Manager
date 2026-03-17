@@ -1,6 +1,6 @@
 import app from './app';
 import dotenv from 'dotenv';
-import connectToDataBase from './db';
+import connectToDataBase from './config/db';
 
 // Cargar variable del Servidor
 dotenv.config();
