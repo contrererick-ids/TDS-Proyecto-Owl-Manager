@@ -3,7 +3,8 @@
   "compilerOptions": {
     "module": "ESNext",
     "moduleResolution": "node",
-    "outDir": "./dist/server"
+    "outDir": "./dist/server",
+    "composite": true
   },
   "include": ["src/server/**/*"]
 }
