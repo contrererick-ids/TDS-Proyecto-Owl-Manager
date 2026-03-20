@@ -8,7 +8,8 @@
     "server:dev": "nodemon --watch src/server --ext ts --exec tsx src/server/server.ts",
     "client:dev": "vite",
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
-    "build": "tsc -p tsconfig.server.json && vite build"
+    "build": "tsc -p tsconfig.server.json && vite build",
+    "seed": "tsx src/server/seeds/createAdmin.ts"
   },
   "repository": {
     "type": "git",
