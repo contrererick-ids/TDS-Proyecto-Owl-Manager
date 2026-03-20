@@ -1,18 +1,18 @@
-import app from '../app';
-import { SaleController } from "../controllers/sale.controller";
+import { Router } from "express";
+import * as saleController from "../controllers/sale.controller";
 
-const saleController = new SaleController();
+const router = Router();
 
 // Crear venta
-app.post("/sales", saleController.createSale);
+router.post("/sales", saleController.createSale);
 
 // Listar ventas
-app.get("/sales", saleController.getSales);
+router.get("/sales", saleController.getSales);
 
 // Obtener venta por ID
-app.get("/sales/:id", saleController.getSaleById);
+router.get("/sales/:id", saleController.getSaleById);
 
 // Ventas por cliente
-app.get("/sales/client/:clientId", saleController.getSalesByClient);
+router.get("/sales/client/:clientId", saleController.getSalesByClient);
 
-export default app;
+export default router;
