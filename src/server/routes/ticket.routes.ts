@@ -4,34 +4,34 @@ import { TicketController } from "../controllers/ticket.controller";
 const ticketController = new TicketController();
 
 // Crear ticket
-app.post("/", ticketController.createTicket);
+app.post("/tickets", ticketController.createTicket);
 
 // Listar tickets
-app.get("/", ticketController.getTickets);
+app.get("/tickets", ticketController.getTickets);
 
 // Obtener ticket por ID
-app.get("/:id", ticketController.getTicketById);
+app.get("/tickets/:id", ticketController.getTicketById);
 
 // Actualizar ticket
-app.put("/:id", ticketController.updateTicket);
+app.put("/tickets/:id", ticketController.updateTicket);
 
 // Cancelar ticket
-app.delete("/:id", ticketController.cancelTicket);
+app.delete("/tickets/:id", ticketController.cancelTicket);
 
 // Reasignar ticket
-app.patch("/:id/assign", ticketController.assignTicket);
+app.patch("/tickets/:id/assign", ticketController.assignTicket);
 
 // Cambiar estatus
-app.patch("/:id/status", ticketController.changeStatus);
+app.patch("/tickets/:id/status", ticketController.changeStatus);
 
 // Tickets asignados al usuario
-app.get("/assigned", ticketController.getAssignedTickets);
+app.get("/tickets/assigned", ticketController.getAssignedTickets);
 
 // Tickets pendientes (ejecutivo)
-app.get("/pending", ticketController.getPendingTickets);
+app.get("/tickets/pending", ticketController.getPendingTickets);
 
 // Comentarios
-app.post("/:id/comments", ticketController.addComment);
-app.get("/:id/comments", ticketController.getComments);
+app.post("/tickets/:id/comments", ticketController.addComment);
+app.get("/tickets/:id/comments", ticketController.getComments);
 
 export default app;
