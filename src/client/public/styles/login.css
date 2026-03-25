@@ -1,0 +1,315 @@
+/* =====================================================
+   Login.css — Owl Manager
+   Paleta:
+     --bg      : #1A2236  (azul marino profundo)  — color base
+     --accent  : #E8A838  (ámbar dorado)          — color de acento
+   Texto:
+     --text-primary   : #F0EDE6  (crema)
+     --text-secondary : #9BAABF  (gris azulado)
+     --text-muted     : #4E6080  (gris oscuro)
+   ===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@300;400;500&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:              #1A2236;
+  --bg-card:         #212d44;
+  --bg-input:        #172031;
+  --accent:          #E8A838;
+  --accent-hover:    #f0b84a;
+  --accent-dim:      rgba(232, 168, 56, 0.12);
+  --border:          rgba(232, 168, 56, 0.18);
+  --text-primary:    #F0EDE6;
+  --text-secondary:  #9BAABF;
+  --text-muted:      #4E6080;
+}
+
+/* ── Layout raíz ─────────────────────────────────── */
+.login-root {
+  min-height: 100vh;
+  display: flex;
+  font-family: 'DM Sans', sans-serif;
+  background-color: var(--bg);
+  color: var(--text-primary);
+}
+
+/* ── Panel lateral ───────────────────────────────── */
+.login-side {
+  width: 420px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 48px 40px;
+  background: linear-gradient(160deg, #111827 0%, var(--bg) 100%);
+  border-right: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+/* círculo decorativo de fondo */
+.login-side::before {
+  content: '';
+  position: absolute;
+  width: 380px;
+  height: 380px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232,168,56,0.08) 0%, transparent 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.login-side__owl {
+  width: 140px;
+  height: 140px;
+  filter: drop-shadow(0 0 28px rgba(232,168,56,0.35));
+  animation: float 4s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.login-side__title {
+  font-family: 'Playfair Display', serif;
+  font-size: 2rem;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+}
+
+.login-side__sub {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.login-side__roles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+}
+
+.login-side__roles .sep { color: var(--accent); opacity: 0.5; }
+
+/* ── Panel principal ─────────────────────────────── */
+.login-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+}
+
+/* ── Card ────────────────────────────────────────── */
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 40px 32px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+  animation: slideUp 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.login-card__header { margin-bottom: 32px; }
+
+.login-card__header h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.6rem;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.login-card__header p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* ── Formulario ──────────────────────────────────── */
+.login-form { display: flex; flex-direction: column; gap: 20px; }
+
+/* Campo */
+.field { display: flex; flex-direction: column; gap: 7px; }
+
+.field label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.field__input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.field__icon {
+  position: absolute;
+  left: 13px;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  pointer-events: none;
+  display: flex;
+}
+
+.field__input-wrap input {
+  width: 100%;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 11px 44px 11px 38px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.field__input-wrap input::placeholder { color: var(--text-muted); }
+
+.field__input-wrap input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-dim);
+}
+
+.field__toggle {
+  position: absolute;
+  right: 11px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.field__toggle:hover { color: var(--accent); }
+.field__toggle svg   { width: 16px; height: 16px; }
+
+/* ── Opciones (recordar + olvidé) ────────────────── */
+.login-form__options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Checkbox personalizado */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-label input[type="checkbox"] { display: none; }
+
+.checkbox-custom {
+  width: 17px;
+  height: 17px;
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-input);
+  flex-shrink: 0;
+  position: relative;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.checkbox-label input:checked + .checkbox-custom {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.checkbox-label input:checked + .checkbox-custom::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: 2px solid var(--bg);
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg);
+}
+
+/* Link olvidé contraseña */
+.forgot-link {
+  font-size: 0.82rem;
+  color: var(--accent);
+  text-decoration: none;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+
+.forgot-link:hover { opacity: 1; text-decoration: underline; }
+
+/* ── Botón principal ─────────────────────────────── */
+.btn-login {
+  margin-top: 4px;
+  width: 100%;
+  padding: 13px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 4px 20px rgba(232,168,56,0.25);
+}
+
+.btn-login:hover {
+  background: var(--accent-hover);
+  box-shadow: 0 6px 28px rgba(232,168,56,0.4);
+}
+
+.btn-login:active { transform: scale(0.98); }
+
+/* ── Nota inferior ───────────────────────────────── */
+.login-card__note {
+  margin-top: 24px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: center;
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .login-root   { flex-direction: column; }
+  .login-side   { width: 100%; padding: 32px 24px; border-right: none; border-bottom: 1px solid var(--border); }
+  .login-side__owl { width: 90px; height: 90px; }
+  .login-card   { padding: 28px 24px; }
+}
