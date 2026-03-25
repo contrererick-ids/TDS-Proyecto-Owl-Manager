@@ -1,10 +1,11 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client'
-import Login from './layouts/login'
+import ReactDOM from 'react-dom/client';
+import App from './layouts/app';
 
-const root = ReactDOM.createRoot(document.getElementById('root')!);
+const root = ReactDOM.createRoot(document.getElementById('root')!)
+
 root.render(
-    <React.StrictMode>
-    <Login></Login>
-    </React.StrictMode>
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 );

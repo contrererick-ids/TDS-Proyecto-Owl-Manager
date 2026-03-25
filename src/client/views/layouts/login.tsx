@@ -7,11 +7,24 @@ const Login: React.FC = () => {
   const [recordar, setRecordar] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log({ usuario, contrasena, recordar });
-    // Pendiente lógica de autenticación
-  };
+  const handleSubmit = async (e: React.SubmitEvent) => {
+  e.preventDefault();
+  
+  const res = await fetch('/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ username: usuario, password: contrasena })
+  });
+
+  if (res.ok) {
+    const { token } = await res.json();
+    localStorage.setItem('token', token);
+    const getRole = JSON.parse(atob(token.split('.')[1]));
+    console.log(getRole);
+  } else {
+    // TODO: show error message
+  }
+};
 
   return (
     <div className="login-root">

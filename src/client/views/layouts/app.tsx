@@ -1,9 +1,17 @@
-import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Login from './login';
 
-export default function App() {
-    return(
-        <div>
-            <h1>Bienvenido a Owl Manager</h1>
-        </div>
-    );
-}
+const App = () => (
+  <BrowserRouter>
+    <Routes>
+      {/* Redirect root to login */}
+      <Route path="/" element={<Navigate to="/auth/login" replace />} />
+      
+      {/* Auth views */}
+      <Route path="/auth/login" element={<Login />} />
+      
+    </Routes>
+  </BrowserRouter>
+);
+
+export default App;
