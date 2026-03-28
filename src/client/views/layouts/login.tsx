@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { api } from '../../services/api';
 import '../../public/styles/login.css';
 
 const Login: React.FC = () => {
@@ -7,53 +8,24 @@ const Login: React.FC = () => {
   const [recordar, setRecordar] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const handleSubmit = async (e: React.SubmitEvent) => {
-  e.preventDefault();
-  
-  const res = await fetch('/api/auth/login', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username: usuario, password: contrasena })
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  if (res.ok) {
-    const { token } = await res.json();
-    localStorage.setItem('token', token);
-    const getRole = JSON.parse(atob(token.split('.')[1]));
-    console.log(getRole);
-  } else {
-    // TODO: show error message
-  }
-};
+    const res = await api.post('/auth/login', { username: usuario, password: contrasena });
+
+    if (res.ok) {
+        const { token } = await res.json();
+        localStorage.setItem('token', token);
+    } else {
+        const { message } = await res.json();
+        console.error('Error:', message);
+    }
+  };
 
   return (
     <div className="login-root">
       {/* Panel izquierdo — decorativo */}
       <aside className="login-side">
-        <div className="login-side__owl">
-          <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            {/* cuerpo */}
-            <ellipse cx="60" cy="72" rx="32" ry="38" fill="var(--accent)" opacity="0.18"/>
-            <ellipse cx="60" cy="72" rx="24" ry="30" fill="var(--accent)" opacity="0.28"/>
-            {/* alas */}
-            <path d="M28 80 Q10 60 28 45 Q36 68 44 75Z" fill="var(--accent)" opacity="0.5"/>
-            <path d="M92 80 Q110 60 92 45 Q84 68 76 75Z" fill="var(--accent)" opacity="0.5"/>
-            {/* cabeza */}
-            <ellipse cx="60" cy="42" rx="22" ry="20" fill="var(--accent)" opacity="0.6"/>
-            {/* orejas */}
-            <polygon points="44,26 38,10 52,22" fill="var(--accent)" opacity="0.7"/>
-            <polygon points="76,26 82,10 68,22" fill="var(--accent)" opacity="0.7"/>
-            {/* ojos */}
-            <circle cx="52" cy="42" r="8" fill="var(--bg)"/>
-            <circle cx="68" cy="42" r="8" fill="var(--bg)"/>
-            <circle cx="52" cy="42" r="5" fill="var(--accent)"/>
-            <circle cx="68" cy="42" r="5" fill="var(--accent)"/>
-            <circle cx="53.5" cy="40.5" r="1.5" fill="var(--bg)"/>
-            <circle cx="69.5" cy="40.5" r="1.5" fill="var(--bg)"/>
-            {/* pico */}
-            <polygon points="57,50 63,50 60,55" fill="var(--bg)" opacity="0.8"/>
-          </svg>
-        </div>
         <h1 className="login-side__title">Owl Manager</h1>
         <p className="login-side__sub">Sistema de gestión interno</p>
         <div className="login-side__roles">

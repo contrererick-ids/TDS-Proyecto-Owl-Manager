@@ -1,17 +1,27 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './login';
+import ProtectedRoute from '../../components/ProtectedRoute';
 
 const App = () => (
-  <BrowserRouter>
-    <Routes>
-      {/* Redirect root to login */}
-      <Route path="/" element={<Navigate to="/auth/login" replace />} />
-      
-      {/* Auth views */}
-      <Route path="/auth/login" element={<Login />} />
-      
-    </Routes>
-  </BrowserRouter>
+    <BrowserRouter>
+        <Routes>
+            <Route path="/" element={<Navigate to="/auth/login" replace />} />
+            <Route path="/auth/login" element={<Login />} />
+
+            <Route path="/dashboard" element={
+                <ProtectedRoute>
+                    {/* <Dashboard /> */}
+                    <div>Dashboard placeholder</div>
+                </ProtectedRoute>
+            } />
+
+            <Route path="/admin" element={
+                <ProtectedRoute allowedRoles={['Administrador']}>
+                    <div>Solo admins</div>
+                </ProtectedRoute>
+            } />
+        </Routes>
+    </BrowserRouter>
 );
 
 export default App;

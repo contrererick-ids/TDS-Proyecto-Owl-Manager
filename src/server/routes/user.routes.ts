@@ -1,16 +1,11 @@
-import { Router } from 'express';
-import * as user from '../controllers/user.controller';
+import { Router, Request, Response } from 'express';
+import { authenticateToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-router.post('/user', user.createUser);
-
-router.get('/user', user.getAllUsers);
-
-router.get('/user/:id', user.getUserById);
-
-router.put('/user/:id', user.updateUser);
-
-router.delete('/user/:id', user.deleteUser);
+// Ruta protegida
+router.get('/me', authenticateToken, (req: Request, res: Response) => {
+    res.json({ message: 'Token válido', user: (req as any).user });
+});
 
 export default router;

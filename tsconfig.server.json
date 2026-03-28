@@ -6,5 +6,5 @@
     "outDir": "./dist/server",
     "composite": true
   },
-  "include": ["src/server/**/*"]
+  "include": ["src/server/**/*", "src/client/services"]
 }
