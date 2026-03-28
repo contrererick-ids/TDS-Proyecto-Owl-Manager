@@ -7,52 +7,42 @@ enum TicketStatus {
     CANCELED = 'Cancelado'
 }
 
-
-interface IComment {
-    ticketId: Types.ObjectId;
-    authorId: Types.ObjectId;
-    text: string;
+// Comment Model Interface
+interface IComments extends Document {
+    commentId: Types.ObjectId;
+    commentAuthorId: Types.ObjectId;
+    text?: string;
     createdAt: Date;
 }
 
 // Ticket Schema
 const tableTicket = new Schema({
+    ticketId: {
+        type: Types.ObjectId,
+        ref: 'Ticket',
+        required: true
+    },
+
+    requestName: {
+        type: String,
+        required: true,
+    },
+
     clientId: {
         type: Types.ObjectId,
         ref: 'Client',
         required: true
     },
-
-    assignedTo: {
-        type: Types.ObjectId,
-        ref: 'User'
-    },
-
-    createdBy: {
-        type: Types.ObjectId,
-        ref: 'User',
-        required: true
-    },
-
-    status: {
-        type: String,
-        enum: Object.values(TicketStatus),
-        required: true,
-        default: TicketStatus.PENDING
-    },
-
-    cancellationReason: {
-        type: String
-    },
-
+    
     comments: [
         {
-            ticketId: {
+            commentId: {
                 type: Types.ObjectId,
-                ref: 'Ticket',
+                ref: 'Comment',
                 required: true
             },
-            authorId: {
+
+            commentAuthorId: {
                 type: Types.ObjectId,
                 ref: 'User',
                 required: true
@@ -66,21 +56,51 @@ const tableTicket = new Schema({
                 default: Date.now
             }
         }
-    ]
+    ],
+    
+    assignedTo: {
+        type: Types.ObjectId,
+        ref: 'User'
+    },
+
+    createdBy: {
+        type: Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
+
+    createdAt: {
+        type: Date,
+        required: true,
+        deault: Date.now
+    },
+
+    lastModifiedDate: {
+        type: Date,
+        required: true,
+        deault: Date.now
+    },
+
+    status: {
+        type: String,
+        enum: Object.values(TicketStatus),
+        required: true,
+        default: TicketStatus.PENDING
+    },
 
 }, { timestamps: true });
 
-
 // Ticket Model Interface
 export interface ITicket extends Document {
+    ticketId: Types.ObjectId;
+    requestName?: string;
     clientId: Types.ObjectId;
+    comments: IComments[];
     assignedTo?: Types.ObjectId;
     createdBy: Types.ObjectId;
+    createdAt: Types.ObjectId;
+    lastModifiedDate: Types.ObjectId;
     status: TicketStatus;
-    cancellationReason?: string;
-    comments: IComment[];
-    createdAt: Date;
-    updatedAt: Date;
 }
 
 export default model<ITicket>('Ticket', tableTicket);
