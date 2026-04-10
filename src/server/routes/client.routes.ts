@@ -1,18 +1,14 @@
 import { Router } from 'express';
-import * as client from '../controllers/client.controller';
+import { createClient, getClients, getClientById, updateClient, deleteClient, assignClientToUser } from '../controllers/client.controller';
 
 const router = Router();
 
-router.post('/client', client.createClient);
-
-router.get('/client', client.getAllClients);
-
-router.get('/client/:id', client.getClientById);
-
-router.put('/client/:id', client.updateClient);
-
-router.delete('/client/:id', client.deleteClient);
-
-router.patch('/client/:id/assign', client.assignClientToUser);
+// Rutas CRUD para clientes
+router.post('/new-client', createClient);
+router.get('/get-all-clients', getClients);
+router.get('/get-client/:id', getClientById);
+router.put('/update-client/:id', updateClient);
+router.delete('/delete-client/:id', deleteClient);
+router.patch('/assign-client/:id', assignClientToUser);
 
 export default router;
