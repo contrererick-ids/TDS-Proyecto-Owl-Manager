@@ -1,18 +1,14 @@
 import { Router } from "express";
-import * as saleController from "../controllers/sale.controller";
+import { authenticateToken } from '../middlewares/auth.middleware';
+import { createSale, getSales, getSaleById, updateSale, deleteSale, getSalesByClient } from "../controllers/sale.controller";
 
 const router = Router();
 
-// Crear venta
-router.post("/sales", saleController.createSale);
-
-// Listar ventas
-router.get("/sales", saleController.getSales);
-
-// Obtener venta por ID
-router.get("/sales/:id", saleController.getSaleById);
-
-// Ventas por cliente
-router.get("/sales/client/:clientId", saleController.getSalesByClient);
+router.post("/create-new-sale", createSale);
+router.get("/get-all-sale", getSales);
+router.get("/client/:clientId", getSalesByClient);
+router.get("/get-sale/:id", getSaleById);
+router.put("/update-sale/:id", updateSale);
+router.delete("/delete-sale/:id", deleteSale);
 
 export default router;
