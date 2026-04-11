@@ -20,7 +20,7 @@ export const createSale = async (req: Request, res: Response) => {
       amount,
       description,
       saleDate,
-      registeredBy, // 🔥 ahora viene del body
+      registeredBy,
     });
 
     await sale.save();
