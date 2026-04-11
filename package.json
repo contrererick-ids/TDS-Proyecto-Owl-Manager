@@ -38,11 +38,14 @@
     "vite": "^8.0.0"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1029.0",
+    "@aws-sdk/s3-request-presigner": "^3.1029.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
     "@types/node": "^25.5.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
@@ -51,6 +54,7 @@
     "@types/swagger-ui-express": "^4.1.8",
     "@vitejs/plugin-react": "^6.0.1",
     "concurrently": "^9.2.1",
+    "multer": "^2.1.1",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
