@@ -8,7 +8,7 @@ const tableDocument = new Schema({
     },
 
     entityId: {
-        type: Types.ObjectId,
+        type: String,
         required: true
     },
 
@@ -37,7 +37,7 @@ const tableDocument = new Schema({
 // Document Model Interface
 export interface IDocument extends Document {
     entityType: string;
-    entityId: Types.ObjectId;
+    entityId: string;
     uploadedBy: Types.ObjectId;
     fileName: string;
     fileUrl: string;
