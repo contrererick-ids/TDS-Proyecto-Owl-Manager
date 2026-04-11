@@ -2,10 +2,12 @@ import { Request, Response } from "express";
 import Sale from "../models/sale.model";
 import Client from "../models/client.model";
 
-
+/**
+ * Crear venta (F-21)
+ */
 export const createSale = async (req: Request, res: Response) => {
   try {
-    const { clientId, amount, description, saleDate } = req.body;
+    const { clientId, amount, description, saleDate, registeredBy } = req.body;
 
     // Validar cliente
     const client = await Client.findById(clientId);
@@ -13,14 +15,12 @@ export const createSale = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Cliente no encontrado" });
     }
 
-    const user = (req as any).user;
-
     const sale = new Sale({
       clientId,
       amount,
       description,
       saleDate,
-      registeredBy: user.id, // middleware
+      registeredBy,
     });
 
     await sale.save();
