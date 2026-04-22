@@ -1,5 +1,5 @@
 import { Router } from "express";
-// { authenticateToken } from '../middlewares/auth.middleware';
+import { authenticateToken } from '../middlewares/auth.middleware';
 import { createSale, getSales, getSaleById, updateSale, deleteSale, getSalesByClient } from "../controllers/sale.controller";
 
 const router = Router();
@@ -12,3 +12,4 @@ router.put("/update-sale/:id", updateSale);
 router.delete("/delete-sale/:id", deleteSale);
 
 export default router;
+
