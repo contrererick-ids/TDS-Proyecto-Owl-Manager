@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'
 import { api } from '../../services/api';
 import '../../public/styles/login.css';
 
@@ -7,18 +8,24 @@ const Login: React.FC = () => {
   const [contrasena, setContrasena] = useState('');
   const [recordar, setRecordar] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await api.post('/auth/login', { username: usuario, password: contrasena });
+    try{
+      const res = await api.post('/auth/login', { username: usuario, password: contrasena });
 
-    if (res.ok) {
-        const { token } = await res.json();
-        localStorage.setItem('token', token);
-    } else {
-        const { message } = await res.json();
-        console.error('Error:', message);
+      if (res.ok) {
+          const { token } = await res.json();
+          localStorage.setItem('token', token);
+          navigate('/dashboard');
+      } else {
+          const { message } = await res.json();
+          console.error('Error:', message);
+      }
+    } catch (error){
+      console.error("Error de red: ", error);
     }
   };
 
