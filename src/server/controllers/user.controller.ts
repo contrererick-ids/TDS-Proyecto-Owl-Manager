@@ -1,20 +1,37 @@
 import { Request, Response } from 'express';
+import bcrypt from 'bcrypt';
 import User from '../models/user.model';
 
 export const createUser = async (req: Request, res: Response) => {
     try {
         const { name, username, email, password, role } = req.body;
-        
-        // Validar campos requeridos
+
         if (!name || !username || !email || !password) {
-            return res.status(400).json({ message: 'name, username, email and password are required' });
+            res.status(400).json({ message: 'name, username, email and password are required' });
+            return;
         }
 
-        const newUser = new User({ name, username, email, password, role });
+        // Verificar duplicados antes de intentar guardar
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+        if (existingUser) {
+            res.status(409).json({ message: 'Username o email ya están en uso' });
+            return;
+        }
+
+        // Hashear contraseña antes de guardar
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const newUser = new User({ name, username, email, password: hashedPassword, role });
         const savedUser = await newUser.save();
+
         res.status(201).json(savedUser);
-    } catch (error) {
-        res.status(400).json({ message: 'Error creating user', error });
+
+    } catch (error: any) {
+        // Duplicate key de Mongoose como red de seguridad
+        if (error.code === 11000) {
+            res.status(409).json({ message: 'Username o email ya están en uso' });
+            return;
+        }
+        res.status(500).json({ message: 'Error creating user', error });
     }
 };
 
@@ -31,7 +48,8 @@ export const getUserById = async (req: Request, res: Response) => {
     try {
         const user = await User.findById(req.params.id);
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ message: 'User not found' });
+            return;
         }
         res.status(200).json(user);
     } catch (error) {
@@ -41,9 +59,19 @@ export const getUserById = async (req: Request, res: Response) => {
 
 export const updateUser = async (req: Request, res: Response) => {
     try {
-        const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        // Si viene nueva contraseña, hashearla antes de actualizar
+        if (req.body.password) {
+            req.body.password = await bcrypt.hash(req.body.password, 10);
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { returnDocument: 'after' }
+        );
         if (!updatedUser) {
-            return res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ message: 'User not found' });
+            return;
         }
         res.status(200).json(updatedUser);
     } catch (error) {
@@ -55,7 +83,8 @@ export const deleteUser = async (req: Request, res: Response) => {
     try {
         const deletedUser = await User.findByIdAndDelete(req.params.id);
         if (!deletedUser) {
-            return res.status(404).json({ message: 'User not found' });
+            res.status(404).json({ message: 'User not found' });
+            return;
         }
         res.status(200).json({ message: 'User deleted successfully' });
     } catch (error) {
