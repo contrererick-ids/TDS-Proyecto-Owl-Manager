@@ -1,9 +1,9 @@
 import { Schema, model, Document } from 'mongoose';
 
 export enum UserRole {
-    ADMIN = 'Administrador',
-    EXECUTIVE = 'Ejecutivo',
-    AGENT = 'Agente'
+    ADMIN = 'ADMIN',
+    EXECUTIVE ='EXECUTIVE',
+    AGENT = 'AGENT'
 }
 
 // User Schema
