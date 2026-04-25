@@ -1,9 +1,9 @@
-import { Schema, model, Document, Types } from 'mongoose';
+import mongoose, { Schema, model, Document, Types } from 'mongoose';
 
 // Sale Schema
 const tableSale = new Schema({
     clientId: {
-        type: Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'Client',
         required: true
     },
@@ -16,17 +16,26 @@ const tableSale = new Schema({
 
     amount: {
         type: Number,
-        required: true
+        required: true,
+        min: 1
     },
 
     description: {
-        type: String
+        type: String,
+        trim: true,
+        maxlength: 200
     },
 
     saleDate: {
         type: Date,
-        required: true
-    }
+        default: Date.now
+    },
+    
+    isActive: {
+        type: Boolean,
+        default: true
+    },
+    
 
 }, { timestamps: true });
 

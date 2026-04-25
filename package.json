@@ -38,7 +38,7 @@
     "vite": "^8.0.0"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.1029.0",
+    "@aws-sdk/client-s3": "^3.1035.0",
     "@aws-sdk/s3-request-presigner": "^3.1029.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
