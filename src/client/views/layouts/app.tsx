@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './login';
+import Dashboard from './dashboard';
 import ProtectedRoute from '../../components/ProtectedRoute';
 
 const App = () => (
@@ -10,8 +11,7 @@ const App = () => (
 
             <Route path="/dashboard" element={
                 <ProtectedRoute>
-                    {/* <Dashboard /> */}
-                    <div>Dashboard placeholder</div>
+                    <Dashboard />
                 </ProtectedRoute>
             } />
 
