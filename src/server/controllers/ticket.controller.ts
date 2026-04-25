@@ -54,15 +54,51 @@ export const createTicket = async (req: Request, res: Response) => {
     }
 };
 
-export const getTickets = async (req: Request, res: Response) => {
+export const getTickets = async (req: any, res: Response) => {
     try {
-        const tickets = await Ticket.find()
+        const { status, assignedTo, unassigned, mine } = req.query;
+
+        let filter: any = {};
+
+        // tickets del usuario
+        if (mine === 'true') {
+            filter.assignedTo = req.user.id;
+        }
+
+        // tickets pendientes
+        if (status) {
+            filter.status = status;
+        }
+
+        // tickets no asignados
+        if (unassigned === 'true') {
+            filter.assignedTo = null;
+        }
+
+        // asignado a alguien específico
+        if (assignedTo) {
+            filter.assignedTo = assignedTo;
+        }
+
+        let query = Ticket.find(filter)
             .populate('clientId', 'name email')
             .populate('assignedTo', 'name email')
             .populate('createdBy', 'name email');
+
+        // info parcial para no asignados (requisito)
+        if (unassigned === 'true') {
+            query = query.select('status comments');
+        }
+
+        const tickets = await query;
+
         res.status(200).json(tickets);
+
     } catch (error) {
-        res.status(500).json({ message: 'Error fetching tickets', error });
+        res.status(500).json({
+            message: 'Error fetching tickets',
+            error
+        });
     }
 };
 
@@ -106,24 +142,43 @@ export const reassignTicket = async (req: Request, res: Response) => {
 };
 
 export const updateStatus = async (req: Request, res: Response) => {
-    try {
-        const { status } = req.body;
-        if (!status) {
-            return res.status(400).json({ message: 'status is required.' });
-        }
-        const updatedTicket = await Ticket.findOneAndUpdate(
-            { ticketId: req.params.ticketId },
-            { status, lastModifiedDate: new Date() },
-            { new: true }
-        );
-        if (!updatedTicket) {
-            return res.status(404).json({ message: 'Ticket not found' });
-        }
-        res.status(200).json(updatedTicket);
+  try {
+    const { ticketId } = req.params;
+    const { status, reason } = req.body;
+
+    const ticket = await Ticket.findById(ticketId);
+
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket not found' });
     }
-    catch (error) {
-        res.status(500).json({ message: 'Error updating ticket status', error });
+
+    // Validación si es cancelación
+    if (status === 'Cancelado' && !reason) {
+      return res.status(400).json({
+        message: 'Cancel reason is required when cancelling a ticket'
+      });
     }
+
+    ticket.status = status;
+
+    // solo guardar motivo si es cancelado
+    if (status === 'Cancelado') {
+      ticket.cancelReason = reason;
+    }
+
+    await ticket.save();
+
+    return res.status(200).json({
+      message: 'Status updated successfully',
+      ticket
+    });
+
+  } catch (error) {
+    return res.status(500).json({
+      message: 'Error updating ticket status',
+      error
+    });
+  }
 };
 
 export const deleteTicket = async (req: Request, res: Response) => {

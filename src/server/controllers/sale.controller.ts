@@ -7,7 +7,14 @@ import Client from "../models/client.model";
  */
 export const createSale = async (req: Request, res: Response) => {
   try {
-    const { clientId, amount, description, saleDate, registeredBy } = req.body;
+    const { clientId, amount, description, saleDate } = req.body;
+
+    // Validar clientId obligatorio
+    if (!clientId) {
+      return res.status(400).json({
+        message: "clientId es requerido"
+      });
+    }
 
     // Validar cliente
     const client = await Client.findById(clientId);
@@ -15,12 +22,26 @@ export const createSale = async (req: Request, res: Response) => {
       return res.status(404).json({ message: "Cliente no encontrado" });
     }
 
+    // Validar monto obligatorio
+    if (amount === undefined) {
+      return res.status(400).json({
+        message: 'Amount es requerido'
+      });
+    }
+
+    // Validar monto válido
+    if (amount <= 0) {
+      return res.status(400).json({
+        message: 'Amount debe ser mayor que 0'
+      });
+    }
+
     const sale = new Sale({
       clientId,
       amount,
       description,
       saleDate,
-      registeredBy,
+      registeredBy: (req as any).user?.id
     });
 
     await sale.save();
@@ -36,7 +57,7 @@ export const createSale = async (req: Request, res: Response) => {
  */
 export const getSales = async (_req: Request, res: Response) => {
   try {
-    const sales = await Sale.find()
+    const sales = await Sale.find({ isActive: true })
       .populate("clientId", "name email")
       .populate("registeredBy", "username");
 
@@ -53,7 +74,7 @@ export const getSalesByClient = async (req: Request, res: Response) => {
   try {
     const { clientId } = req.params;
 
-    const sales = await Sale.find({ clientId });
+    const sales = await Sale.find({ clientId, isActive: true });
 
     res.json(sales);
   } catch (error) {
@@ -66,15 +87,25 @@ export const getSalesByClient = async (req: Request, res: Response) => {
  */
 export const getSaleById = async (req: Request, res: Response) => {
   try {
-    const sale = await Sale.findById(req.params.id);
+    const { id } = req.params;
+
+    const sale = await Sale.findById(id)
+      .populate("clientId", "name email")
+      .populate("registeredBy", "username");
 
     if (!sale) {
-      return res.status(404).json({ message: "Venta no encontrada" });
+      return res.status(404).json({
+        message: "Venta no encontrada"
+      });
     }
 
     res.json(sale);
+
   } catch (error) {
-    res.status(500).json({ message: "Error al obtener la venta", error });
+    res.status(500).json({
+      message: "Error al obtener la venta",
+      error
+    });
   }
 };
 
@@ -83,15 +114,37 @@ export const getSaleById = async (req: Request, res: Response) => {
  */
 export const updateSale = async (req: Request, res: Response) => {
   try {
-    const sale = await Sale.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
+    const { amount, clientId } = req.body;
+
+    // validar clientId si viene
+    if (clientId !== undefined) {
+      const client = await Client.findById(clientId);
+      if (!client) {
+        return res.status(404).json({
+          message: "Cliente no encontrado"
+        });
+      }
+    }
+
+    // validar monto si viene
+    if (amount !== undefined && amount <= 0) {
+      return res.status(400).json({
+        message: "Amount debe ser mayor que 0"
+      });
+    }
+
+    const sale = await Sale.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
 
     if (!sale) {
       return res.status(404).json({ message: "Venta no encontrada" });
     }
 
     res.json(sale);
+
   } catch (error) {
     res.status(500).json({ message: "Error al actualizar la venta", error });
   }
@@ -102,14 +155,27 @@ export const updateSale = async (req: Request, res: Response) => {
  */
 export const deleteSale = async (req: Request, res: Response) => {
   try {
-    const sale = await Sale.findByIdAndDelete(req.params.id);
+    const sale = await Sale.findByIdAndUpdate(
+      req.params.id,
+      { isActive: false },
+      { new: true }
+    );
 
     if (!sale) {
-      return res.status(404).json({ message: "Venta no encontrada" });
+      return res.status(404).json({
+        message: "Venta no encontrada"
+      });
     }
 
-    res.json({ message: "Venta eliminada" });
+    res.json({
+      message: "Venta desactivada correctamente",
+      sale
+    });
+
   } catch (error) {
-    res.status(500).json({ message: "Error al eliminar la venta", error });
+    res.status(500).json({
+      message: "Error al eliminar la venta",
+      error
+    });
   }
 };
