@@ -17,8 +17,9 @@ const Login: React.FC = () => {
       const res = await api.post('/auth/login', { username: usuario, password: contrasena });
 
       if (res.ok) {
-          const { token } = await res.json();
+          const { token, userId } = await res.json();
           localStorage.setItem('token', token);
+          localStorage.setItem('userId', userId);
           navigate('/dashboard');
       } else {
           const { message } = await res.json();
