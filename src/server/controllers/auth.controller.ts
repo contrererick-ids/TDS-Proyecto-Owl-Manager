@@ -19,7 +19,8 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Credenciales inválidas.' });
         }
         const token = jsonwebtoken.sign({ id: user._id, name: user.name, role: user.role }, process.env.JWT_SECRET as string, { expiresIn: '1h' });
-        return res.status(200).json({ token });
+        const userId = user._id;
+        return res.status(200).json({ token, userId });
     } catch (error) {
         console.error('Error en login:', error);
         res.status(500).json({ message: 'Error interno del servidor' });
