@@ -70,6 +70,10 @@ const tableTicket = new Schema({
         enum: Object.values(TicketStatus),
         required: true,
         default: TicketStatus.PENDING
+    },
+    cancelReason: {
+        type: String,
+        required: false
     }
 
 }, { timestamps: true });
@@ -83,6 +87,7 @@ export interface ITicket extends Document {
     createdBy: Types.ObjectId;
     lastModifiedDate: Date;
     status: TicketStatus;
+    cancelReason: string;
 }
 
 export default model<ITicket>('Ticket', tableTicket);
