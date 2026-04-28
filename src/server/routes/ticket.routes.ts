@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { requireRole } from '../middlewares/role.middleware'
 import { UserRole} from '../models/user.model'
-import { createTicket, getTickets, getTicketByTicketId, reassignTicket, updateStatus, deleteTicket, addComment } from "../controllers/ticket.controller";
+import { createTicket, getTickets, getTicketByTicketId, reassignTicket, updateStatus, deleteTicket, addComment, getMyTickets } from "../controllers/ticket.controller";
 
 const router = Router();
 
@@ -95,6 +95,8 @@ router.post("/new-ticket", authenticateToken, requireRole(UserRole.EXECUTIVE), c
  *        description: Ticket not found
  */
 router.get("/get-ticket/:ticketId", authenticateToken, requireRole(UserRole.AGENT), getTicketByTicketId);
+
+router.get("/get-my-tickets/:userId", authenticateToken, requireRole(UserRole.AGENT), getMyTickets);
 
 /**
  * @swagger
