@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { login } from '../controllers/auth.controller';
+import { getUserProfile, login } from '../controllers/auth.controller';
 
 const router = Router();
 
@@ -42,5 +42,7 @@ const router = Router();
  *         description: Credenciales inválidas
  */
 router.post("/login", login);
+
+router.get("/profile/:id", getUserProfile);
 
 export default router;

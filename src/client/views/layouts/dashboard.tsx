@@ -28,7 +28,7 @@ export default function Dashboard() {
           return;
         }
 
-        const res = await api.get(`/users/get-user/${userId}`);
+        const res = await api.get(`/auth/profile/${userId}`);
         if (res.ok) {
           const data = await res.json();
           setUser(data); // <- aquí guardas el objeto en el estado
