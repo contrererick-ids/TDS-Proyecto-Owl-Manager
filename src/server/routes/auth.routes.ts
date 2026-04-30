@@ -43,6 +43,37 @@ const router = Router();
  */
 router.post("/login", login);
 
+/**
+ * @swagger
+ * /profile/{id}:
+ *   get:
+ *     summary: Cargar perfil de usuario
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [username, password]
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 example: admin
+ *               password:
+ *                 type: string
+ *                 example: 123456
+ *     responses:
+ *       200:
+ *         description: Perfil de usuario cargado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       401:
+ *         description: Error al cargar el perfil de usuario
+ */
 router.get("/profile/:id", getUserProfile);
 
 export default router;
