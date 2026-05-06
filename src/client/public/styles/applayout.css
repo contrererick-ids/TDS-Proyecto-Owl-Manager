@@ -1,0 +1,29 @@
+/* =====================================================
+   AppLayout.css — Owl Manager
+   Shell general: sidebar + área de contenido
+   ===================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=DM+Sans:wght@300;400;500&display=swap');
+
+/* div.app-shell */
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+  background-color: #1A2236;
+  font-family: 'DM Sans', sans-serif;
+  color: #F0EDE6;
+}
+
+/* main.app-main — área de contenido dinámica (Outlet) */
+.app-main {
+  flex: 1;
+  min-width: 0;           /* evita overflow en flex */
+  padding: 32px 36px;
+  overflow-y: auto;
+}
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .app-shell    { flex-direction: column; }
+  .app-main     { padding: 20px 16px; }
+}
