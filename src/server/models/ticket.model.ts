@@ -1,10 +1,10 @@
 import { Schema, model, Document, Types } from 'mongoose';
 
 export enum TicketStatus {
-    PENDING = 'Pendiente',
-    IN_PROGRESS = 'En proceso',
-    CLOSED = 'Cerrado',
-    CANCELED = 'Cancelado'
+    PENDING = 'PENDING',
+    IN_PROGRESS = 'IN_PROCESS',
+    CLOSED = 'CLOSED',
+    CANCELED = 'CANCELED'
 }
 
 export interface IComments {
@@ -19,7 +19,7 @@ const tableTicket = new Schema({
         unique: true,
         required: true
     },
-
+    // Asunto del folio o trámite a realizar
     requestName: {
         type: String,
         required: true

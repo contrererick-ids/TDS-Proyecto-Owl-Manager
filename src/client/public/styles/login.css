@@ -35,7 +35,7 @@
   color: var(--text-primary);
 }
 
-/* ── Panel lateral ───────────────────────────────── */
+/* ── Panel lateral (aside) ───────────────────────── */
 .login-side {
   width: 420px;
   flex-shrink: 0;
@@ -65,6 +65,7 @@
   pointer-events: none;
 }
 
+/* SVG del búho — animación float */
 .login-side__owl {
   width: 140px;
   height: 140px;
@@ -77,6 +78,7 @@
   50%       { transform: translateY(-10px); }
 }
 
+/* h1 del panel lateral */
 .login-side__title {
   font-family: 'Playfair Display', serif;
   font-size: 2rem;
@@ -84,6 +86,7 @@
   letter-spacing: 0.02em;
 }
 
+/* subtítulo del panel lateral */
 .login-side__sub {
   font-size: 0.85rem;
   color: var(--text-secondary);
@@ -91,6 +94,7 @@
   text-transform: uppercase;
 }
 
+/* lista de roles */
 .login-side__roles {
   display: flex;
   align-items: center;
@@ -103,7 +107,7 @@
 
 .login-side__roles .sep { color: var(--accent); opacity: 0.5; }
 
-/* ── Panel principal ─────────────────────────────── */
+/* ── Panel principal (main) ──────────────────────── */
 .login-main {
   flex: 1;
   display: flex;
@@ -112,7 +116,7 @@
   padding: 32px 24px;
 }
 
-/* ── Card ────────────────────────────────────────── */
+/* ── Card del formulario ─────────────────────────── */
 .login-card {
   width: 100%;
   max-width: 420px;
@@ -129,6 +133,7 @@
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* Encabezado de la card (h2 + p) */
 .login-card__header { margin-bottom: 32px; }
 
 .login-card__header h2 {
@@ -146,7 +151,7 @@
 /* ── Formulario ──────────────────────────────────── */
 .login-form { display: flex; flex-direction: column; gap: 20px; }
 
-/* Campo */
+/* Contenedor de cada campo (div.field) */
 .field { display: flex; flex-direction: column; gap: 7px; }
 
 .field label {
@@ -157,12 +162,14 @@
   color: var(--text-secondary);
 }
 
+/* Wrapper del input con iconos (div.field__input-wrap) */
 .field__input-wrap {
   position: relative;
   display: flex;
   align-items: center;
 }
 
+/* Icono izquierdo (span.field__icon) */
 .field__icon {
   position: absolute;
   left: 13px;
@@ -193,6 +200,7 @@
   box-shadow: 0 0 0 3px var(--accent-dim);
 }
 
+/* Botón toggle de mostrar/ocultar contraseña (button.field__toggle) */
 .field__toggle {
   position: absolute;
   right: 11px;
@@ -209,7 +217,7 @@
 .field__toggle:hover { color: var(--accent); }
 .field__toggle svg   { width: 16px; height: 16px; }
 
-/* ── Opciones (recordar + olvidé) ────────────────── */
+/* ── Opciones: recordarme + olvidé (div.login-form__options) ── */
 .login-form__options {
   display: flex;
   align-items: center;
@@ -218,7 +226,7 @@
   gap: 8px;
 }
 
-/* Checkbox personalizado */
+/* Checkbox personalizado (label.checkbox-label) */
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -231,6 +239,7 @@
 
 .checkbox-label input[type="checkbox"] { display: none; }
 
+/* Caja visual del checkbox (span.checkbox-custom) */
 .checkbox-custom {
   width: 17px;
   height: 17px;
@@ -260,7 +269,7 @@
   transform: rotate(45deg);
 }
 
-/* Link olvidé contraseña */
+/* Link olvidé contraseña (a.forgot-link) */
 .forgot-link {
   font-size: 0.82rem;
   color: var(--accent);
@@ -271,7 +280,7 @@
 
 .forgot-link:hover { opacity: 1; text-decoration: underline; }
 
-/* ── Botón principal ─────────────────────────────── */
+/* ── Botón submit (button.btn-login) ─────────────── */
 .btn-login {
   margin-top: 4px;
   width: 100%;
@@ -289,14 +298,20 @@
   box-shadow: 0 4px 20px rgba(232,168,56,0.25);
 }
 
-.btn-login:hover {
+.btn-login:hover:not(:disabled) {
   background: var(--accent-hover);
   box-shadow: 0 6px 28px rgba(232,168,56,0.4);
 }
 
-.btn-login:active { transform: scale(0.98); }
+.btn-login:active:not(:disabled) { transform: scale(0.98); }
 
-/* ── Nota inferior ───────────────────────────────── */
+/* Estado deshabilitado durante el fetch */
+.btn-login:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Nota inferior (p.login-card__note) ──────────── */
 .login-card__note {
   margin-top: 24px;
   font-size: 0.75rem;
@@ -308,8 +323,8 @@
 
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 768px) {
-  .login-root   { flex-direction: column; }
-  .login-side   { width: 100%; padding: 32px 24px; border-right: none; border-bottom: 1px solid var(--border); }
+  .login-root  { flex-direction: column; }
+  .login-side  { width: 100%; padding: 32px 24px; border-right: none; border-bottom: 1px solid var(--border); }
   .login-side__owl { width: 90px; height: 90px; }
-  .login-card   { padding: 28px 24px; }
+  .login-card  { padding: 28px 24px; }
 }

@@ -26,3 +26,16 @@ export const login = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Error interno del servidor' });
     }
 };
+
+export const getUserProfile = async (req: Request, res: Response) => {
+    try {
+        const user = await User.findById(req.params.id).select('-password');
+        if (!user) {
+            return res.status(404).json({ message: 'Usuario no encontrado' });
+        }
+        res.status(200).json(user);
+    } catch (error) {
+        console.error('Error fetching user profile:', error);
+        res.status(500).json({ message: 'Error interno del servidor' });
+    }
+};
