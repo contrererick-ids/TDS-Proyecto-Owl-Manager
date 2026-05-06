@@ -2,12 +2,10 @@ import { Request, Response } from 'express';
 import Ticket from '../models/ticket.model';
 import Client from '../models/client.model';
 import User from '../models/user.model';
-import { createDecipheriv } from 'node:crypto';
-import mongoose from 'mongoose';
 
 const generateTicketId = async (): Promise<string> => {
     const lastTicket = await Ticket.findOne().sort({ createdAt: -1 });
-    const lastNumber = lastTicket?.ticketId ? parseInt(lastTicket.ticketId) : 0;
+    const lastNumber = lastTicket?.ticketId ? Number.parseInt(lastTicket.ticketId) : 0;
     return String(lastNumber + 1).padStart(6, '0');
 };
 
@@ -95,7 +93,10 @@ export const getTickets = async (req: any, res: Response) => {
             query = query.select('status comments');
         }
 
-        const tickets = await query;
+        const tickets = await query
+            .populate('clientId', 'name email')
+            .populate('assignedTo', 'name email')
+            .populate('createdBy', 'name email');
 
         res.status(200).json(tickets);
 
@@ -120,8 +121,13 @@ export const getMyTickets = async (req: any, res: Response) => {
         }
 
         // Si el usuario existe, buscamos y respondemos con los tickets asignados a ese usuario
-        const tickets = await Ticket.find({ assignedTo: userId });
+        const tickets = await Ticket.find({ assignedTo: userId })
+            .populate('clientId', 'name email ')
+            .populate('assignedTo', 'name email')
+            .populate('createdBy', 'name email');
+
         res.status(200).json(tickets);
+    
     } catch (error) {
         res.status(500).json({ message: 'Error fetching tickets', error });
     }
