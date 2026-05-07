@@ -1,4 +1,4 @@
-import app from './app';
+import httpServer from './app';
 import dotenv from 'dotenv';
 import connectToDataBase from './config/db';
 
@@ -10,7 +10,7 @@ const PORT = process.env.SERVER_PORT || 3000;
 async function startServer() {
     try {
         await connectToDataBase();
-        app.listen(PORT, () => {
+        httpServer.listen(PORT, () => {
             console.log(`Server is running on port ${PORT}`);
         });
     } catch (error) {

@@ -1,3 +1,4 @@
+import { io } from '../app';
 import { Request, Response } from 'express';
 import Ticket from '../models/ticket.model';
 import Client from '../models/client.model';
@@ -166,6 +167,14 @@ export const reassignTicket = async (req: Request, res: Response) => {
         if (!updatedTicket) {
             return res.status(404).json({ message: 'Ticket not found' });
         }
+
+        // Notificación en tiempo real al nuevo asignado con socket.io
+        io.to(assignedUser._id.toString()).emit('ticket-asignado', {
+            ticketId: updatedTicket.ticketId,
+            requestName: updatedTicket.requestName,
+            message: `You have been assigned to ticket ${updatedTicket.ticketId}: "${updatedTicket.requestName}"`
+        });
+        
         res.status(200).json(updatedTicket);
     } catch (error) {
         res.status(500).json({ message: 'Error reassigning ticket', error });
