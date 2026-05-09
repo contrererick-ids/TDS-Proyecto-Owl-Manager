@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import User from '../models/user.model';
+import { sendWelcomeEmail } from '../services/email.service';
 
 export const createUser = async (req: Request, res: Response) => {
     try {
@@ -20,8 +21,31 @@ export const createUser = async (req: Request, res: Response) => {
 
         // Hashear contraseña antes de guardar
         const hashedPassword = await bcrypt.hash(password, 10);
-        const newUser = new User({ name, username, email, password: hashedPassword, role });
+
+        const newUser = new User({
+            name,
+            username,
+            email,
+            password: hashedPassword,
+            role
+        });
+
         const savedUser = await newUser.save();
+
+        // Enviar correo de bienvenida
+        try {
+            await sendWelcomeEmail({
+                email: savedUser.email,
+                name: savedUser.name,
+                username: savedUser.username,
+                role: savedUser.role
+            });
+
+            console.log('Correo enviado correctamente');
+
+        } catch (emailError) {
+            console.error('Error enviando correo:', emailError);
+        }
 
         res.status(201).json(savedUser);
 
