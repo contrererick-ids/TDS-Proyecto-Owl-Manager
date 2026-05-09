@@ -96,6 +96,34 @@ router.post("/new-ticket", authenticateToken, requireRole(UserRole.EXECUTIVE), c
  */
 router.get("/get-ticket/:ticketId", authenticateToken, requireRole(UserRole.AGENT), getTicketByTicketId);
 
+
+
+/**
+ * @swagger
+ * /tickets/get-my-tickets/:{userId}:
+ *  get:
+ *    tags: [Tickets]
+ *    summary: Get tickets assigned to a specific agent
+ *    description: Returns all tickets assigned to the authenticated agent
+ *    security:
+ *      - bearerAuth: []
+ *    parameters:
+ *      - in: path
+ *        name: userId
+ *        required: true
+ *        schema:
+ *          type: string
+ *        description: Agent user ID
+ *    responses:
+ *      200:
+ *        description: Assigned tickets retrieved successfully
+ *      401:
+ *        description: Unauthorized
+ *      403:
+ *        description: Forbidden (Agent role required)
+ *      404:
+ *        description: User or tickets not found
+ */
 router.get("/get-my-tickets/:userId", authenticateToken, requireRole(UserRole.AGENT), getMyTickets);
 
 /**
