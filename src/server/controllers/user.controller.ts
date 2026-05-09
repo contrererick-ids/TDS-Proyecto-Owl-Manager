@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import User from '../models/user.model';
+import Ticket from '../models/ticket.model';
 import { sendWelcomeEmail } from '../services/email.service';
 
 export const createUser = async (req: Request, res: Response) => {
@@ -108,6 +109,12 @@ export const deleteUser = async (req: Request, res: Response) => {
         const deletedUser = await User.findByIdAndDelete(req.params.id);
         if (!deletedUser) {
             res.status(404).json({ message: 'User not found' });
+            return;
+        }
+        // Check if user has assigned tickets
+        const ticketsAssignedToUser = await Ticket.find({ assignedTo: req.params.id });
+        if (ticketsAssignedToUser.length > 0) {
+            res.status(400).json({ message: 'Cannot delete user with assigned tickets. Please ensure all tickets are reassigned before deleting the user.' });
             return;
         }
         res.status(200).json({ message: 'User deleted successfully' });
