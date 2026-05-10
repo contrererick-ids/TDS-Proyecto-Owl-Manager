@@ -6,7 +6,7 @@ const tableClient = new Schema({
     email: { type: String },
     phone: { type: String },
     company: { type: String },
-    
+    documents : [{ type: Types.ObjectId, ref: 'Document' }],
     assignedTo: {
         type: Types.ObjectId,
         ref: 'User',
@@ -21,8 +21,9 @@ export interface IClient extends Document {
     name: string;
     email?: string;
     phone?: string;
-    company?: string;
+    company: string;
     assignedTo: Types.ObjectId;
+    documents?: Types.ObjectId[];
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;
