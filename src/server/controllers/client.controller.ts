@@ -2,23 +2,36 @@ import { Request, Response } from 'express';
 import Client from '../models/client.model';
 import User from '../models/user.model';
 
+// Función para validar que los campos ingresados de usuario y contraseña cumplan con un formato mínimo seguro
+const validateStringField = (text: string): boolean => {
+    const regex = /^[a-zA-Z0-9@$!.]+$/;
+    return regex.test(text);
+};
+
 export const createClient = async (req: Request, res: Response) => {
     try {
         const { name, email, phone, company, assignedTo } = req.body;
 
-        if (!name || !assignedTo) {
-            return res.status(400).json({ message: 'Name and assignedTo are required.' });
+        // Validamos que los campos requeridos cumplan con el formato mínimo seguro
+        if (!validateStringField(name) || (!validateStringField(company))) {
+            return res.status(400).json({ message: 'Name and company must contain only alphanumeric characters and "@", "$", "!" or "." ', error: 'Invalid format' });
         }
 
-        // Buscar al usuario por nombre y obtener su ObjectId
-        const user = await User.findOne({ name: assignedTo });
+        if (!name || !assignedTo || !company) {
+            return res.status(400).json({ message: 'Name, company, and assignedTo are required.', error: 'Missing required fields' });
+        }
+
+        // Buscar al usuario por nombre y validar que existe
+        const user = await User.findOne({ userId: assignedTo });
         if (!user) {
-            return res.status(404).json({ message: `User "${assignedTo}" not found.` });
+            return res.status(404).json({ message: `User "${assignedTo}" not found.`, error: 'User not found' });
         }
-
+        
         const newClient = new Client({ name, email, phone, company, assignedTo: user._id });
         const savedClient = await newClient.save();
+
         res.status(201).json(savedClient);
+
     } catch (error) {
         res.status(500).json({ message: 'Error creating client', error });
     }
