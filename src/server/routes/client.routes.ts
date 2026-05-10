@@ -103,6 +103,30 @@ router.post('/new-client', authenticateToken, requireRole(UserRole.EXECUTIVE), c
 */
 router.get('/get-client-by-id/:id', authenticateToken, requireRole(UserRole.AGENT), getClientById);
 
+/**
+ * @swagger
+ * /clients/get-client-by-name:
+ *  get:
+ *    tags: [Clients]
+ *    summary: Get client by name
+ *    description: Returns a single client by their name
+ *    security:
+ *      - bearerAuth: []
+ *    parameters:
+ *      - in: path
+ *        name: name
+ *        required: true
+ *        schema:
+ *          type: string
+ *        description: Name of the client
+ *    responses:
+ *      200:
+ *        description: Client found
+ *      400:
+ *        description: Name must contain only alphanumeric characters and "@", "$", "!" or "."
+ *      404:
+ *        description: Client not found
+*/
 router.get('/get-client-by-name', authenticateToken, requireRole(UserRole.AGENT), getClientByName);
 
 /**
