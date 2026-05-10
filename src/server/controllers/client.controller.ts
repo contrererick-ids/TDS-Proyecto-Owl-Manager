@@ -4,7 +4,7 @@ import User from '../models/user.model';
 
 // Función para validar que los campos ingresados de usuario y contraseña cumplan con un formato mínimo seguro
 const validateStringField = (text: string): boolean => {
-    const regex = /^[a-zA-Z0-9@$!.]+$/;
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9@$!. ]+$/;
     return regex.test(text);
 };
 
@@ -53,6 +53,28 @@ export const getClientById = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Client not found' });
         }
         res.status(200).json(client);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching client', error });
+    }
+};
+
+export const getClientByName = async (req: Request, res: Response) => {
+    console.log('Received request to get client by name with body:', req.body);
+    try {
+        const { name } = req.body;
+
+        // Validamos que el nombre cumpla con el formato mínimo seguro
+        if (!validateStringField(name)) {
+            return res.status(400).json({ message: 'Name must contain only alphanumeric characters and "@", "$", "!" or "." ', error: 'Invalid format' });
+        }
+
+        const client = await Client.findOne({ name }).populate('assignedTo', 'name email');
+        if (!client) {
+            return res.status(404).json({ message: 'Client not found' });
+        }
+
+        res.status(200).json(client);
+
     } catch (error) {
         res.status(500).json({ message: 'Error fetching client', error });
     }
