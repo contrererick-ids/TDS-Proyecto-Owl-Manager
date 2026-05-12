@@ -4,11 +4,12 @@ import { Schema, model, Document, Types } from 'mongoose';
 const tableDocument = new Schema({
     entityType: {
         type: String,
+        enum: ['Client', 'Sale', 'Ticket'],
         required: true
     },
 
     entityId: {
-        type: String,
+        type: Types.ObjectId,
         required: true
     },
 
@@ -37,7 +38,7 @@ const tableDocument = new Schema({
 // Document Model Interface
 export interface IDocument extends Document {
     entityType: string;
-    entityId: string;
+    entityId: Types.ObjectId;
     uploadedBy: Types.ObjectId;
     fileName: string;
     fileUrl: string;

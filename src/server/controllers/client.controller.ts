@@ -1,24 +1,59 @@
 import { Request, Response } from 'express';
 import Client from '../models/client.model';
 import User from '../models/user.model';
+import { uploadDocument } from '../controllers/document.controller'; 
+
+// Función para validar que los campos ingresados cumplan con un formato mínimo seguro
+const validateStringField = (text: string): boolean => {
+    const regex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9@$!. ]+$/;
+    return regex.test(text);
+};
 
 export const createClient = async (req: Request, res: Response) => {
     try {
         const { name, email, phone, company, assignedTo } = req.body;
 
-        if (!name || !assignedTo) {
-            return res.status(400).json({ message: 'Name and assignedTo are required.' });
+        // Validamos que los campos requeridos cumplan con el formato mínimo seguro
+        if (!validateStringField(name) || (!validateStringField(company))) {
+            return res.status(400).json({ message: 'Name and company must contain only alphanumeric characters and "@", "$", "!" or "." ', error: 'Invalid format' });
         }
 
-        // Buscar al usuario por nombre y obtener su ObjectId
-        const user = await User.findOne({ name: assignedTo });
+        if (!name || !assignedTo || !company) {
+            return res.status(400).json({ message: 'Name, company, and assignedTo are required.', error: 'Missing required fields' });
+        }
+
+        // Buscar al usuario por nombre y validar que existe
+        const user = await User.findOne({ userId: assignedTo });
         if (!user) {
-            return res.status(404).json({ message: `User "${assignedTo}" not found.` });
+            return res.status(404).json({ message: `User "${assignedTo}" not found.`, error: 'User not found' });
         }
-
+        
         const newClient = new Client({ name, email, phone, company, assignedTo: user._id });
         const savedClient = await newClient.save();
+
+        // Si al crear al cliente se envían documentos, los agregamos a la base de datos y los asociamos al cliente
+        // si no se envían documentos, simplemente devolvemos el cliente creado sin documentos asociados
+        if (req.body.documents && Array.isArray(req.body.documents)) {
+            const entityType = 'Client';
+            const entityId = savedClient._id;
+            for (const doc of req.body.documents) {
+                const { fileName, mimeType } = doc;
+                uploadDocument({
+                    body: {
+                        entityType,
+                        entityId,
+                        uploadedBy: assignedTo
+                    },
+                    file: {
+                        originalname: fileName,
+                        mimetype: mimeType
+                    }
+                }, res);
+            }
+        }
+
         res.status(201).json(savedClient);
+
     } catch (error) {
         res.status(500).json({ message: 'Error creating client', error });
     }
@@ -45,61 +80,71 @@ export const getClientById = async (req: Request, res: Response) => {
     }
 };
 
-export const updateClient = async (
-  req: Request,
-  res: Response
-) => {
+export const getClientByName = async (req: Request, res: Response) => {
+    console.log('Received request to get client by name with body:', req.body);
+    try {
+        const { name } = req.body;
+
+        // Validamos que el nombre cumpla con el formato mínimo seguro
+        if (!validateStringField(name)) {
+            return res.status(400).json({ message: 'Name must contain only alphanumeric characters and "@", "$", "!" or "." ', error: 'Invalid format' });
+        }
+
+        const client = await Client.findOne({ name }).populate('assignedTo', 'name email');
+        if (!client) {
+            return res.status(404).json({ message: 'Client not found' });
+        }
+
+        res.status(200).json(client);
+
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching client', error });
+    }
+};
+
+export const updateClient = async (req: Request, res: Response) => {
+    try {
+        const updatedClient = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        if (!updatedClient) {
+            return res.status(404).json({ message: 'Client not found' });
+        }
+        res.status(200).json(updatedClient);
+    } catch (error) {
+        res.status(500).json({ message: 'Error updating client', error });
+    }
+};
+
+export const updateClient = async ( req: Request, res: Response) => {
 
   try {
-
-    const {
-      assignedTo,
-      ...rest
-    } = req.body;
-
-    let updateData: any = {
-      ...rest
-    };
+    
+    const { assignedTo, ...rest } = req.body;
+    let updateData: any = { ...rest };
 
     // Si viene assignedTo,
     // buscar usuario por nombre
     if (assignedTo) {
-
-      const user = await User.findOne({
-        name: assignedTo
-      });
+      const user = await User.findOne({ name: assignedTo });
 
       if (!user) {
-        return res.status(404).json({
-          message: 'Assigned user not found'
-        });
+        return res.status(404).json({ message: 'Assigned user not found' });
       }
 
       updateData.assignedTo = user._id;
     }
 
-    const updatedClient =
-      await Client.findByIdAndUpdate(
-        req.params.id,
-        updateData,
-        { new: true }
-      );
+    const updatedClient = await Client.findByIdAndUpdate( req.params.id, updateData, { new: true });
 
     if (!updatedClient) {
-      return res.status(404).json({
-        message: 'Client not found'
-      });
+      return res.status(404).json({ message: 'Client not found' });
     }
 
     res.status(200).json(updatedClient);
 
   } catch (error) {
-
-    res.status(500).json({
-      message: 'Error updating client',
-      error
-    });
+    res.status(500).json({ message: 'Error updating client', error });
   }
+
 };
 
 export const deleteClient = async (req: Request, res: Response) => {
