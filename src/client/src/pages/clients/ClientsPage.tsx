@@ -2,6 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { IClient, IUser } from '../../types/models';
 import '../../../public/styles/pagelayout.css';
+import ClientFormModal from '../../components/modals/ClientFormModal';
+import toast from 'react-hot-toast';
+
 
 // ─── Iconos ───────────────────────────────────────────────────────────────────
 
@@ -53,18 +56,29 @@ export default function ClientsPage() {
   const [search, setSearch]     = useState('');
   const [selected, setSelected] = useState<IClient | null>(null);
 
+  // modal crear cliente
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] =
+    useState<'create' | 'edit'>('create');
+  const [selectedClient, setSelectedClient] =
+    useState<IClient | null>(null);
+
   // ── Fetch ──
   useEffect(() => {
     async function fetchClients() {
       setLoading(true);
       try {
-        const res = await fetch('/api/clients', {
+        const res = await fetch('/api/clients/get-all-clients', {
           headers: { Authorization: `Bearer ${token}` },
         });
+
+        if (!res.ok) {
+          throw new Error('Error cargando clientes');
+        }
         const data = await res.json();
         setClients(Array.isArray(data) ? data : data.clients ?? []);
       } catch (err) {
-        console.error('Error cargando clientes:', err);
+        toast.error('Error cargando clientes');
       } finally {
         setLoading(false);
       }
@@ -82,16 +96,123 @@ export default function ClientsPage() {
 
   // ── Desactivar (solo Admin) ──
   async function toggleActive(c: IClient) {
+
     try {
-      await fetch(`/api/clients/${c._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ isActive: !c.isActive }),
-      });
-      setClients(prev => prev.map(x => x._id === c._id ? { ...x, isActive: !x.isActive } : x));
-      setSelected(prev => prev?._id === c._id ? { ...prev, isActive: !prev.isActive } : prev);
+
+      const response = await fetch(
+        `/api/clients/delete-client/${c._id}`,
+        {
+          method: 'DELETE',
+
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Error actualizando cliente');
+      }
+
+      setClients(prev =>
+        prev.map(x =>
+          x._id === c._id
+            ? { ...x, isActive: !x.isActive }
+            : x
+        )
+      );
+
+      setSelected(prev =>
+        prev?._id === c._id
+          ? { ...prev, isActive: !prev.isActive }
+          : prev
+      );
+
     } catch (err) {
-      console.error('Error actualizando cliente:', err);
+
+      toast.error('Error actualizando cliente:', err);
+    }
+  }
+
+  async function handleCreateClient(
+    data: any
+  ) {
+
+    try {
+
+      const response = await fetch(
+        '/api/clients/new-client',
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify(data),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      toast.success('Cliente creado');
+
+      setIsModalOpen(false);
+
+      window.location.reload();
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message || 'Error creating client'
+      );
+    }
+  }
+
+  async function handleEditClient(
+    data: any
+  ) {
+
+    if (!selectedClient) return;
+
+    try {
+
+      const response = await fetch(
+        `/api/clients/update-client/${selectedClient._id}`,
+        {
+          method: 'PUT',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify(data),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      toast.success('Cliente actualizado');
+
+      setIsModalOpen(false);
+
+      window.location.reload();
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message || 'Error updating client'
+      );
     }
   }
 
@@ -115,7 +236,17 @@ export default function ClientsPage() {
           </div>
           {/* Admin y Executive pueden crear clientes */}
           {!isAgent && (
-            <button className="btn-primary">
+            <button
+              className="btn-primary"
+              onClick={() => {
+
+                setModalMode('create');
+
+                setSelectedClient(null);
+
+                setIsModalOpen(true);
+              }}
+            >
               <IconPlus /> Nuevo cliente
             </button>
           )}
@@ -235,7 +366,18 @@ export default function ClientsPage() {
             {/* Acciones según rol */}
             {!isAgent && (
               <div className="detail-panel__actions">
-                <button className="btn-secondary" style={{ justifyContent: 'center' }}>
+                <button
+                  className="btn-secondary"
+                  style={{ justifyContent: 'center' }}
+                  onClick={() => {
+
+                    setModalMode('edit');
+
+                    setSelectedClient(selected);
+
+                    setIsModalOpen(true);
+                  }}
+                >
                   Editar cliente
                 </button>
                 {isAdmin && (
@@ -258,6 +400,19 @@ export default function ClientsPage() {
         )}
 
       </div>
+
+      <ClientFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        mode={modalMode}
+        initialData={selectedClient}
+        onSubmit={
+          modalMode === 'create'
+            ? handleCreateClient
+            : handleEditClient
+        }
+      />
+
     </div>
   );
 }
