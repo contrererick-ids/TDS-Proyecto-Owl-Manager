@@ -3,7 +3,7 @@ import Client from '../models/client.model';
 import User from '../models/user.model';
 import { uploadDocument } from '../controllers/document.controller'; 
 
-// Función para validar que los campos ingresados de usuario y contraseña cumplan con un formato mínimo seguro
+// Función para validar que los campos ingresados cumplan con un formato mínimo seguro
 const validateStringField = (text: string): boolean => {
     const regex = /^[a-zA-ZáéíóúÁÉÍÓÚüÜñÑ0-9@$!. ]+$/;
     return regex.test(text);
