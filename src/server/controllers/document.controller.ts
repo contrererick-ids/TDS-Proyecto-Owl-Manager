@@ -2,39 +2,51 @@ import { Request, Response } from 'express';
 import { PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3, BUCKET_NAME } from '../config/s3.config';
+import { Types } from 'mongoose';
 import DocumentModel from '../models/document.model';
 import User from '../models/user.model';
 import Client from '../models/client.model';
 import Ticket from '../models/ticket.model';
+import Sale from '../models/sale.model';
 
 export const uploadDocument = async (req: Request, res: Response) => {
     try {
-        const { entityType, entityId, uploadedBy } = req.body;
+        const { entityType, entityId } = req.body;
+        const uploadedBy = (req as any).user?.id; // Aseguramos que uploadedBy sea el ID del usuario autenticado
         const file = req.file;
 
         if (!entityType || !entityId || !uploadedBy || !file) {
             return res.status(400).json({ message: 'entityType, entityId, uploadedBy and file are required.' });
         }
 
-        if (entityType !== 'ticket' && entityType !== 'client') {
-            return res.status(400).json({ message: 'entityType must be "ticket" or "client".' });
+        //Validamos que el entityId sea un ObjectId válido
+        if (!Types.ObjectId.isValid(entityId)) {
+            return res.status(400).json({ message: 'entityId must be a valid ObjectId.' });
+        }
+
+        // Valdamos que el entityType sea uno de los permitidos
+        if (entityType !== 'Ticket' && entityType !== 'Client' && entityType !== 'Sale') {
+            return res.status(400).json({ message: 'entityType must be "ticket", "client" or "sale".' });
         }
 
         // Validar que la entidad existe
-        if (entityType === 'ticket') {
-            const ticket = await Ticket.findOne({ ticketId: entityId });
-            if (!ticket) {
-                return res.status(404).json({ message: `Ticket "${entityId}" not found.` });
-            }
+        if (entityType === 'Ticket') {
+            const ticket = await Ticket.findById(entityId);
+            if (!ticket) return res.status(404).json({ message: `Ticket not found.` });
+                
+        } else if (entityType === 'Client') {
+            const client = await Client.findById(entityId);
+            if (!client) return res.status(404).json({ message: `Client not found.` });
+        
+        } else if (entityType === 'Sale') {
+            const sale = await Sale.findById(entityId);
+            if (!sale) return res.status(404).json({ message: `Sale not found.` });
         } else {
-            const client = await Client.findOne({ name: entityId });
-            if (!client) {
-                return res.status(404).json({ message: `Client "${entityId}" not found.` });
-            }
+            return res.status(400).json({ message: 'Invalid entityType. Must be "ticket", "client" or "sale".' });
         }
 
         // Validar usuario que sube el documento
-        const user = await User.findOne({ name: uploadedBy });
+        const user = await User.findById(uploadedBy);
         if (!user) {
             return res.status(404).json({ message: `User "${uploadedBy}" not found.` });
         }
@@ -66,7 +78,9 @@ export const uploadDocument = async (req: Request, res: Response) => {
         });
 
         const savedDocument = await newDocument.save();
+
         res.status(201).json(savedDocument);
+
     } catch (error) {
         res.status(500).json({ message: 'Error uploading document', error });
     }
