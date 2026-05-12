@@ -2,6 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { IUser, UserRole, USER_ROLE_LABEL } from '../../types/models';
 import '../../../public/styles/pagelayout.css';
+import toast from 'react-hot-toast';
+import UserFormModal from '../../components/modals/UserFormModal';
+import { API_URL } from '../../config/api';
+import '../../../public/styles/modal.css';
 
 const IconSearch = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -44,22 +48,47 @@ export default function UsersPage() {
   const [search, setSearch]     = useState('');
   const [selected, setSelected] = useState<IUser | null>(null);
 
+  // conectar modal CreateUser
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
+  const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
+
+
   // ── Fetch ──
-  useEffect(() => {
-    async function fetchUsers() {
-      setLoading(true);
-      try {
-        const res = await fetch('/api/users', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        setUsers(Array.isArray(data) ? data : data.users ?? []);
-      } catch (err) {
-        console.error('Error cargando usuarios:', err);
-      } finally {
-        setLoading(false);
-      }
+
+  async function fetchUsers() {
+
+    setLoading(true);
+
+    try {
+
+      const res = await fetch(`${API_URL}/users/get-all-users`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        },
+      });
+
+      const data = await res.json();
+
+      setUsers(
+        Array.isArray(data)
+          ? data
+          : data.users ?? []
+      );
+
+    } catch (err) {
+
+      console.error('Error cargando usuarios:', err);
+
+      toast.error('Error loading users');
+
+    } finally {
+
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
     fetchUsers();
   }, [token]);
 
@@ -73,16 +102,118 @@ export default function UsersPage() {
 
   // ── Toggle activo (solo Admin) ──
   async function toggleActive(u: IUser) {
+
     try {
-      await fetch(`/api/users/${u._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ isActive: !u.isActive }),
-      });
-      setUsers(prev => prev.map(x => x._id === u._id ? { ...x, isActive: !x.isActive } : x));
-      setSelected(prev => prev?._id === u._id ? { ...prev, isActive: !prev.isActive } : prev);
+
+      const response = await fetch(
+        `${API_URL}/users/delete-user/${u._id}`,
+        {
+          method: 'DELETE',
+
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Error deleting user');
+      }
+
+      toast.success(
+        u.isActive
+          ? 'Usuario desactivado'
+          : 'Usuario activado'
+      );
+
+      fetchUsers();
+
     } catch (err) {
-      console.error('Error actualizando usuario:', err);
+
+      console.error(err);
+
+      toast.error('Error updating user');
+    }
+  }
+
+  async function handleCreateUser(data: any) {
+
+    try {
+
+      const response = await fetch(`${API_URL}/users/create-new-user`, {
+
+        method: 'POST',
+
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+
+        body: JSON.stringify(data),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      toast.success('Usuario creado correctamente');
+
+      fetchUsers();
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message || 'Error creating user'
+      );
+
+      throw error;
+    }
+  }
+
+  async function handleEditUser(data: any) {
+
+    if (!selectedUser) return;
+
+    try {
+
+      const response = await fetch(
+        `${API_URL}/users/update-user/${selectedUser._id}`,
+        {
+          method: 'PUT',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            name: data.name,
+            username: data.username,
+            email: data.email,
+            role: data.role,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      toast.success('Usuario actualizado');
+
+      fetchUsers();
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message || 'Error updating user'
+      );
+
+      throw error;
     }
   }
 
@@ -106,7 +237,17 @@ export default function UsersPage() {
           </div>
           {/* Solo Admin puede crear usuarios */}
           {isAdmin && (
-            <button className="btn-primary">
+            <button
+              className="btn-primary"
+              onClick={() => {
+
+                setModalMode('create');
+
+                setSelectedUser(null);
+
+                setIsModalOpen(true);
+              }}
+            >
               <IconPlus /> Nuevo usuario
             </button>
           )}
@@ -236,7 +377,18 @@ export default function UsersPage() {
             {/* Acciones — solo Admin puede modificar */}
             {isAdmin && (
               <div className="detail-panel__actions">
-                <button className="btn-secondary" style={{ justifyContent: 'center' }}>
+                <button
+                  className="btn-secondary"
+                  style={{ justifyContent: 'center' }}
+                  onClick={() => {
+
+                    setModalMode('edit');
+
+                    setSelectedUser(selected);
+
+                    setIsModalOpen(true);
+                  }}
+                >
                   Editar usuario
                 </button>
                 <button
@@ -257,6 +409,17 @@ export default function UsersPage() {
         )}
 
       </div>
+      <UserFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        mode={modalMode}
+        initialData={selectedUser}
+        onSubmit={
+          modalMode === 'create'
+            ? handleCreateUser
+            : handleEditUser
+        }
+      />
     </div>
   );
 }

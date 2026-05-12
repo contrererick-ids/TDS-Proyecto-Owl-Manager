@@ -7,6 +7,8 @@ import {
 } from '../../types/models';
 import '../../../public/styles/pagelayout.css';
 import { set } from 'mongoose';
+import toast from 'react-hot-toast';
+import TicketFormModal from '../../components/modals/TicketFormModal';
 
 const IconSearch = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -33,10 +35,19 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-function getName(ref: string | IUser | IClient | undefined): string {
+function getName(ref: any): string {
+
   if (!ref) return '—';
-  if (typeof ref === 'string') return ref;
-  return (ref as IUser).name ?? (ref as IClient).name ?? '—';
+
+  if (typeof ref === 'string') {
+    return ref;
+  }
+
+  return (
+    ref.name ||
+    ref.username ||
+    '—'
+  );
 }
 
 export default function TicketsPage() {
@@ -52,24 +63,86 @@ export default function TicketsPage() {
   const [selected, setSelected] = useState<ITicket | null>(null);
   const [statusFilter, setStatusFilter] = useState<TicketStatus | 'ALL'>('ALL');
 
+  // modal para crear ticket
+  const [clients, setClients] =
+  useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] =
+    useState(false);
+  const [modalMode, setModalMode] =
+    useState<'create' | 'edit'>('create');
+  const [selectedTicket, setSelectedTicket] =
+    useState<ITicket | null>(null);
+  const [newComment, setNewComment] =
+  useState('');
+
   // ── Fetch ──
   useEffect(() => {
     async function fetchTickets() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/tickets/get-my-tickets/${authUser?.id}`, {
-          headers: { Authorization: `Bearer ${token}` },
+
+        const endpoint = isAgent
+          ? `/api/tickets/get-my-tickets/${authUser?.id}`
+          : '/api/tickets/get-all-tickets';
+
+        const res = await fetch(endpoint, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
+
         const data = await res.json();
-        setTickets(Array.isArray(data) ? data : data.tickets ?? []);
+
+        setTickets(
+          Array.isArray(data)
+            ? data
+            : data.tickets ?? []
+        );
+
       } catch (err) {
-        console.error('Error cargando tickets:', err);
+
+        console.error(
+          'Error cargando tickets:',
+          err
+        );
+
       } finally {
         setLoading(false);
       }
     }
     fetchTickets();
+    fetchClients();
   }, [token]);
+
+  async function fetchClients() {
+
+    try {
+
+      const res = await fetch(
+        '/api/clients/get-all-clients',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      setClients(
+        Array.isArray(data)
+          ? data
+          : data.clients ?? []
+      );
+
+    } catch (err) {
+
+      console.error(
+        'Error cargando clientes:',
+        err
+      );
+    }
+  }
 
   // ── Filtros ──
   const filtered = useMemo(() =>
@@ -85,7 +158,7 @@ export default function TicketsPage() {
   // ── Cambiar status (Agent, Admin, Executive) ──
   async function changeStatus(ticket: ITicket, newStatus: TicketStatus) {
     try {
-      await fetch(`/api/tickets/${ticket._id}`, {
+      await fetch(`/api/tickets/update-status/${ticket._id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ status: newStatus }),
@@ -98,17 +171,220 @@ export default function TicketsPage() {
   }
 
   // ── Reclamar ticket (Agent) ──
-  async function claimTicket(ticket: ITicket) {
+  async function claimTicket(
+    ticket: ITicket
+  ) {
+
     try {
-      await fetch(`/api/tickets/${ticket._id}/claim`, {
-        method: 'PATCH',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setTickets(prev => prev.map(t =>
-        t._id === ticket._id ? { ...t, assignedTo: authUser?.id } : t
-      ));
+
+      const response = await fetch(
+        `/api/tickets/reassign-ticket/${ticket.ticketId}`,
+        {
+          method: 'PATCH',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            assignedTo: authUser?.name,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      setTickets(prev =>
+        prev.map(t =>
+          t._id === ticket._id
+            ? {
+                ...t,
+                assignedTo: authUser
+              }
+            : t
+        )
+      );
+
     } catch (err) {
-      console.error('Error reclamando ticket:', err);
+
+      console.error(
+        'Error reclamando ticket:',
+        err
+      );
+    }
+  }
+
+  async function handleCreateTicket(
+    data: any
+  ) {
+
+    try {
+      const response = await fetch(
+        '/api/tickets/new-ticket',
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            ...data,
+            createdBy: authUser,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      toast.success('Ticket creado');
+
+      setIsModalOpen(false);
+
+      window.location.reload();
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message || 'Error creating ticket'
+      );
+    }
+  }
+
+  async function handleEditTicket(
+    data: any
+  ) {
+
+    if (!selectedTicket) return;
+
+    try {
+
+      const response = await fetch(
+        `/api/tickets/update-ticket/${selectedTicket._id}`,
+        {
+          method: 'PUT',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            requestName: data.requestName,
+            clientId: data.clientId,
+            status: data.status,
+            assignedTo: data.assignedTo,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      toast.success('Ticket actualizado');
+
+      const formattedResult = {
+        ...result,
+
+        clientId:
+          clients.find(
+            client =>
+              client._id ===
+              (
+                typeof result.clientId === 'string'
+                  ? result.clientId
+                  : result.clientId?._id
+              )
+          ) || result.clientId,
+      };
+
+      setTickets(prev =>
+        prev.map(ticket =>
+          ticket._id === result._id
+            ? formattedResult
+            : ticket
+        )
+      );
+
+setSelected(formattedResult);
+      setSelected(result);
+
+      setIsModalOpen(false);
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message || 'Error updating ticket'
+      );
+    }
+  }
+
+  async function addComment() {
+
+    if (!selected || !newComment.trim()) {
+      return;
+    }
+
+    try {
+
+      const response = await fetch(
+        `/api/tickets/add-comment/${selected.ticketId}`,
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            authorName:
+              authUser?.name ||
+              authUser?.username,
+
+            text: newComment,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      setSelected(result);
+
+      setTickets(prev =>
+        prev.map(ticket =>
+          ticket._id === result._id
+            ? result
+            : ticket
+        )
+      );
+
+      setNewComment('');
+
+      toast.success('Comentario agregado');
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message || 'Error adding comment'
+      );
     }
   }
 
@@ -149,7 +425,17 @@ export default function TicketsPage() {
 
           {/* Admin y Executive pueden crear tickets */}
           {(isAdmin || isExecutive) && (
-            <button className="btn-primary">
+            <button
+              className="btn-primary"
+              onClick={() => {
+
+                setModalMode('create');
+
+                setSelectedTicket(null);
+
+                setIsModalOpen(true);
+              }}
+            >
               <IconPlus /> Nuevo ticket
             </button>
           )}
@@ -273,6 +559,42 @@ export default function TicketsPage() {
               )}
             </div>
 
+            <hr className="detail-panel__divider" />
+
+            <div className="detail-field">
+
+              <span className="detail-field__label">
+                Agregar comentario
+              </span>
+
+              <textarea
+                className="modal-input"
+                placeholder="Write a comment..."
+                rows={4}
+                value={newComment}
+                onChange={e =>
+                  setNewComment(e.target.value)
+                }
+                style={{
+                  marginTop: '10px',
+                  resize: 'none',
+                }}
+              />
+
+              <button
+                className="btn-primary"
+                style={{
+                  marginTop: '12px',
+                  width: '100%',
+                  justifyContent: 'center',
+                }}
+                onClick={addComment}
+              >
+                Add Comment
+              </button>
+
+            </div>
+
             {/* Acciones según rol */}
             <div className="detail-panel__actions">
               {/* Agent: solo cambiar status y reclamar */}
@@ -301,7 +623,17 @@ export default function TicketsPage() {
               {/* Admin / Executive: editar completo + cambiar status */}
               {(isAdmin || isExecutive) && (
                 <>
-                  <button className="btn-secondary" style={{ justifyContent: 'center' }}>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => {
+
+                      setModalMode('edit');
+
+                      setSelectedTicket(selected);
+
+                      setIsModalOpen(true);
+                    }}
+                  >
                     Editar ticket
                   </button>
                   <select
@@ -334,6 +666,18 @@ export default function TicketsPage() {
         )}
 
       </div>
+      <TicketFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        mode={modalMode}
+        initialData={selectedTicket}
+        clients={clients}
+        onSubmit={
+          modalMode === 'create'
+            ? handleCreateTicket
+            : handleEditTicket
+        }
+      />
     </div>
   );
 }
