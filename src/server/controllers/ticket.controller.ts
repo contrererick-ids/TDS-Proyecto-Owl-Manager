@@ -18,7 +18,7 @@ export const createTicket = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'requestName, clientName and createdBy are required.' });
         }
         // Se valida que el cliente exista
-        const client = await Client.findById(req.params.id);
+        const client = await Client.findById(clientId);
         if (!client) {
             return res.status(404).json({ message: `Client "${clientId}" not found.` });
         }
@@ -40,10 +40,13 @@ export const createTicket = async (req: Request, res: Response) => {
             assignedToId = assignedUser._id;
         }
         // Se genera un Ticket Id único
-        const ticketId = await generateTicketId();
+        const count = await Ticket.countDocuments();
+
+        const generatedTicketId =
+        `TCK-${String(count + 1).padStart(3, '0')}`;
 
         const newTicket = new Ticket({
-            ticketId,
+            ticketId: generatedTicketId,
             requestName,
             clientId: client._id,
             assignedTo: assignedToId,
@@ -216,6 +219,68 @@ export const updateStatus = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(500).json({
       message: 'Error updating ticket status',
+      error
+    });
+  }
+};
+
+export const updateTicket = async (
+  req: Request,
+  res: Response
+) => {
+
+  try {
+
+    const {
+      assignedTo,
+      ...rest
+    } = req.body;
+
+    let updateData: any = {
+      ...rest
+    };
+
+    // Buscar agente por nombre
+    if (assignedTo) {
+
+      const user = await User.findOne({
+        name: assignedTo
+      });
+
+      if (!user) {
+
+        return res.status(404).json({
+          message: 'Assigned user not found'
+        });
+      }
+
+      updateData.assignedTo = user._id;
+    }
+
+    await Ticket.findByIdAndUpdate(
+    req.params.id,
+    updateData,
+    { new: true }
+    );
+
+    const updatedTicket =
+    await Ticket.findById(req.params.id)
+        .populate('clientId')
+        .populate('assignedTo');
+
+    if (!updatedTicket) {
+
+      return res.status(404).json({
+        message: 'Ticket not found'
+      });
+    }
+
+    res.status(200).json(updatedTicket);
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: 'Error updating ticket',
       error
     });
   }

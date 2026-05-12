@@ -66,7 +66,7 @@ router.get('/get-all-clients', authenticateToken, requireRole(UserRole.AGENT), g
  *              address:
  *                type: string
  *                example: Guadalajara, Jalisco
- *              assignedExecutive:
+ *              assignedTo:
  *                type: string
  *                description: User ID of assigned executive
  *    responses:
@@ -160,7 +160,7 @@ router.get('/get-client-by-name', authenticateToken, requireRole(UserRole.AGENT)
  *                type: string
  *              address:
  *                type: string
- *              assignedExecutive:
+ *              assignedTo:
  *                type: string
  *    responses:
  *      200:

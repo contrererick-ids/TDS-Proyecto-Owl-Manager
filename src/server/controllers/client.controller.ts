@@ -114,6 +114,39 @@ export const updateClient = async (req: Request, res: Response) => {
     }
 };
 
+export const updateClient = async ( req: Request, res: Response) => {
+
+  try {
+    
+    const { assignedTo, ...rest } = req.body;
+    let updateData: any = { ...rest };
+
+    // Si viene assignedTo,
+    // buscar usuario por nombre
+    if (assignedTo) {
+      const user = await User.findOne({ name: assignedTo });
+
+      if (!user) {
+        return res.status(404).json({ message: 'Assigned user not found' });
+      }
+
+      updateData.assignedTo = user._id;
+    }
+
+    const updatedClient = await Client.findByIdAndUpdate( req.params.id, updateData, { new: true });
+
+    if (!updatedClient) {
+      return res.status(404).json({ message: 'Client not found' });
+    }
+
+    res.status(200).json(updatedClient);
+
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating client', error });
+  }
+
+};
+
 export const deleteClient = async (req: Request, res: Response) => {
     try {
         const deletedClient = await Client.findByIdAndDelete(req.params.id);

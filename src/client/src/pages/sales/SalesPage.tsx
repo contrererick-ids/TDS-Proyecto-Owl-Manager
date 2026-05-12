@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ISale, IClient, IUser } from '../../types/models';
 import '../../../public/styles/pagelayout.css';
+import toast from 'react-hot-toast';
+import SaleFormModal from '../../components/modals/SaleFormModal';
 
 const IconSearch = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -33,10 +35,22 @@ function formatMXN(amount: number) {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(amount);
 }
 
-function getName(ref: string | IUser | IClient | undefined): string {
+function getName(
+  ref: string | IUser | IClient | undefined
+): string {
+
   if (!ref) return '—';
-  if (typeof ref === 'string') return ref;
-  return (ref as IUser).name ?? (ref as IClient).name ?? '—';
+
+  if (typeof ref === 'string') {
+    return ref;
+  }
+
+  return (
+    (ref as IUser).name ||
+    (ref as any).username ||
+    (ref as IClient).name ||
+    '—'
+  );
 }
 
 export default function SalesPage() {
@@ -50,12 +64,21 @@ export default function SalesPage() {
   const [search, setSearch]     = useState('');
   const [selected, setSelected] = useState<ISale | null>(null);
 
+  // crear modal de ventas
+  const [clients, setClients] = useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] =
+    useState(false);
+  const [modalMode, setModalMode] =
+    useState<'create' | 'edit'>('create');
+  const [selectedSale, setSelectedSale] =
+    useState<ISale | null>(null);
+
   // ── Fetch ──
   useEffect(() => {
     async function fetchSales() {
       setLoading(true);
       try {
-        const res = await fetch('/api/sales', {
+        const res = await fetch('/api/sales/get-all-sale', {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -67,7 +90,38 @@ export default function SalesPage() {
       }
     }
     fetchSales();
+    fetchClients();
   }, [token]);
+
+  async function fetchClients() {
+
+    try {
+
+      const res = await fetch(
+        '/api/clients/get-all-clients',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      setClients(
+        Array.isArray(data)
+          ? data
+          : data.clients ?? []
+      );
+
+    } catch (err) {
+
+      console.error(
+        'Error cargando clientes:',
+        err
+      );
+    }
+  }
 
   // ── Filtro ──
   // Agent solo ve sus propias ventas
@@ -97,7 +151,7 @@ export default function SalesPage() {
   async function deleteSale(sale: ISale) {
     if (!window.confirm('¿Seguro que deseas eliminar esta venta?')) return;
     try {
-      await fetch(`/api/sales/${sale._id}`, {
+      await fetch(`/api/sales/delete-sale/${sale._id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -105,6 +159,88 @@ export default function SalesPage() {
       setSelected(null);
     } catch (err) {
       console.error('Error eliminando venta:', err);
+    }
+  }
+
+  async function handleCreateSale(
+    data: any
+  ) {
+
+    try {
+
+      const response = await fetch(
+        '/api/sales/create-new-sale',
+        {
+          method: 'POST',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify(data),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      toast.success('Venta creada');
+
+      setIsModalOpen(false);
+
+      window.location.reload();
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message || 'Error creating sale'
+      );
+    }
+  }
+
+  async function handleEditSale(
+    data: any
+  ) {
+
+    if (!selectedSale) return;
+
+    try {
+
+      const response = await fetch(
+        `/api/sales/update-sale/${selectedSale._id}`,
+        {
+          method: 'PUT',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify(data),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      toast.success('Venta actualizada');
+
+      setIsModalOpen(false);
+
+      window.location.reload();
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message || 'Error updating sale'
+      );
     }
   }
 
@@ -133,7 +269,17 @@ export default function SalesPage() {
             />
           </div>
           {/* Todos los roles pueden registrar ventas */}
-          <button className="btn-primary">
+          <button
+            className="btn-primary"
+            onClick={() => {
+
+              setModalMode('create');
+
+              setSelectedSale(null);
+
+              setIsModalOpen(true);
+            }}
+          >
             <IconPlus /> Nueva venta
           </button>
         </div>
@@ -236,7 +382,18 @@ export default function SalesPage() {
             <div className="detail-panel__actions">
               {/* Admin y Executive pueden editar */}
               {!isAgent && (
-                <button className="btn-secondary" style={{ justifyContent: 'center' }}>
+                <button
+                  className="btn-secondary"
+                  style={{ justifyContent: 'center' }}
+                  onClick={() => {
+
+                    setModalMode('edit');
+
+                    setSelectedSale(selected);
+
+                    setIsModalOpen(true);
+                  }}
+                >
                   Editar venta
                 </button>
               )}
@@ -260,6 +417,19 @@ export default function SalesPage() {
         )}
 
       </div>
+      <SaleFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        mode={modalMode}
+        initialData={selectedSale}
+        clients={clients}
+        onSubmit={
+          modalMode === 'create'
+            ? handleCreateSale
+            : handleEditSale
+        }
+      />
+
     </div>
   );
 }

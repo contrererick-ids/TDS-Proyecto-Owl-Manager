@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authenticateToken } from '../middlewares/auth.middleware';
 import { requireRole } from '../middlewares/role.middleware'
 import { UserRole} from '../models/user.model'
-import { createTicket, getTickets, getTicketByTicketId, reassignTicket, updateStatus, deleteTicket, addComment, getMyTickets } from "../controllers/ticket.controller";
+import { createTicket, getTickets, getTicketByTicketId, reassignTicket, updateStatus, updateTicket, deleteTicket, addComment, getMyTickets } from "../controllers/ticket.controller";
 
 const router = Router();
 
@@ -248,5 +248,9 @@ router.patch("/update-status/:ticketId", authenticateToken, requireRole(UserRole
  *        description: Comment added successfully
  */
 router.post("/add-comment/:ticketId", authenticateToken, requireRole(UserRole.AGENT), addComment);
+
+
+
+router.put("/update-ticket/:id", authenticateToken, updateTicket);
 
 export default router;
