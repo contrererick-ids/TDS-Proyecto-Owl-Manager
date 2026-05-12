@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import Client from '../models/client.model';
 import User from '../models/user.model';
+import Document from '../models/document.model';
+import { uploadDocument } from '../controllers/document.controller'; 
+import { upload } from '../config/multer.config';
 
 // Función para validar que los campos ingresados de usuario y contraseña cumplan con un formato mínimo seguro
 const validateStringField = (text: string): boolean => {
@@ -29,6 +32,27 @@ export const createClient = async (req: Request, res: Response) => {
         
         const newClient = new Client({ name, email, phone, company, assignedTo: user._id });
         const savedClient = await newClient.save();
+
+        // Si al crear al cliente se envían documentos, los agregamos a la base de datos y los asociamos al cliente
+        // si no se envían documentos, simplemente devolvemos el cliente creado sin documentos asociados
+        if (req.body.documents && Array.isArray(req.body.documents)) {
+            const entityType = 'Client';
+            const entityId = savedClient._id;
+            for (const doc of req.body.documents) {
+                const { fileName, mimeType } = doc;
+                uploadDocument({
+                    body: {
+                        entityType,
+                        entityId,
+                        uploadedBy: assignedTo
+                    },
+                    file: {
+                        originalname: fileName,
+                        mimetype: mimeType
+                    }
+                }, res);
+            }
+        }
 
         res.status(201).json(savedClient);
 
