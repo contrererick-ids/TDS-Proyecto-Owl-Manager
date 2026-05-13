@@ -5,9 +5,10 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: any) => Promise<void>;
-  mode: 'create' | 'edit';
+  mode: 'create' | 'edit' | 'assign';
   initialData?: any;
   clients: any[];
+  agents: any[];
 }
 
 export default function TicketFormModal({
@@ -17,6 +18,7 @@ export default function TicketFormModal({
   mode,
   initialData,
   clients,
+  agents,
 }: Props) {
 
     const [formData, setFormData] = useState({
@@ -88,7 +90,9 @@ export default function TicketFormModal({
             {
               mode === 'create'
                 ? 'Create Ticket'
-                : 'Edit Ticket'
+                : mode === 'assign'
+                  ? `Assign Ticket To: `
+                  : 'Edit Ticket'
             }
           </h2>
           {
@@ -119,52 +123,60 @@ export default function TicketFormModal({
           className="modal-form"
           onSubmit={handleSubmit}
         >
+          
 
-          <input
-            className="modal-input"
-            placeholder="Request Name"
-            value={formData.requestName}
-            onChange={e =>
-              setFormData({
-                ...formData,
-                requestName: e.target.value,
-              })
-            }
-            required
-          />
+          {
+            mode !== 'assign' && (
+              <>
+
+                <input
+                  className="modal-input"
+                  placeholder="Request Name"
+                  value={formData.requestName}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      requestName: e.target.value,
+                    })
+                  }
+                  required
+                />
+
+                <select
+                  className="modal-select"
+                  value={formData.clientId}
+                  onChange={e =>
+                    setFormData({
+                      ...formData,
+                      clientId: e.target.value,
+                    })
+                  }
+                  required
+                >
+
+                  <option value="">
+                    Select Client
+                  </option>
+
+                  {clients.map(client => (
+
+                    <option
+                      key={client._id}
+                      value={client._id}
+                    >
+                      {client.name}
+                    </option>
+
+                  ))}
+
+                </select>
+
+              </>
+            )
+          }
 
           <select
             className="modal-select"
-            value={formData.clientId}
-            onChange={e =>
-              setFormData({
-                ...formData,
-                clientId: e.target.value,
-              })
-            }
-            required
-          >
-
-            <option value="">
-              Select Client
-            </option>
-
-            {clients.map(client => (
-
-              <option
-                key={client._id}
-                value={client._id}
-              >
-                {client.name}
-              </option>
-
-            ))}
-
-          </select>
-
-          <input
-            className="modal-input"
-            placeholder="Assigned Agent Name (optional)"
             value={formData.assignedTo}
             onChange={e =>
               setFormData({
@@ -172,36 +184,60 @@ export default function TicketFormModal({
                 assignedTo: e.target.value,
               })
             }
-          />
+          >
 
-          <select
-            className="modal-select"
-            value={formData.status}
-            onChange={e =>
-                    setFormData({
+            <option value="">
+              Select Agent
+            </option>
+
+            {agents.map(agent => (
+
+              <option
+                key={agent._id}
+                value={agent.name}
+              >
+                {agent.name}
+              </option>
+
+            ))}
+
+          </select>
+
+
+          {
+            mode !== 'assign' && (
+
+              <select
+                className="modal-select"
+                value={formData.status}
+                onChange={e =>
+                  setFormData({
                     ...formData,
                     status: e.target.value,
-                    })
+                  })
                 }
-            >
+              >
 
                 <option value="PENDING">
-                    Pending
+                  Pending
                 </option>
 
                 <option value="IN_PROCESS">
-                    In Process
+                  In Process
                 </option>
 
                 <option value="CLOSED">
-                    Closed
+                  Closed
                 </option>
 
                 <option value="CANCELLED">
-                    Cancelled
+                  Cancelled
                 </option>
 
-            </select>
+              </select>
+
+            )
+          }
 
           <div className="modal-footer">
 

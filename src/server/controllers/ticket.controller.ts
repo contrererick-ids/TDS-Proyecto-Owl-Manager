@@ -14,6 +14,13 @@ export const createTicket = async (req: Request, res: Response) => {
     try {
         const { requestName, clientId, assignedTo, createdBy } = req.body;
 
+        console.log({
+            requestName,
+            clientId,
+            assignedTo,
+            createdBy
+        });
+
         if (!requestName || !clientId || !createdBy) {
             return res.status(400).json({ message: 'requestName, clientName and createdBy are required.' });
         }
@@ -33,17 +40,32 @@ export const createTicket = async (req: Request, res: Response) => {
         // En caso de venir sin usuario asignado, el campo se envía con el valor 'undefined'.
         let assignedToId = undefined;
         if (assignedTo) {
-            const assignedUser = await User.findById(assignedTo.id);
+            const assignedUser =
+                await User.findOne({
+                    name: assignedTo
+                });
             if (!assignedUser) {
                 return res.status(404).json({ message: `User "${assignedTo}" not found.` });
             }
             assignedToId = assignedUser._id;
         }
         // Se genera un Ticket Id único
-        const count = await Ticket.countDocuments();
+        const lastTicket = await Ticket.findOne()
+        .sort({ createdAt: -1 });
+
+        let nextNumber = 1;
+
+        if (lastTicket?.ticketId) {
+
+        const lastNumber = parseInt(
+            lastTicket.ticketId.replace('TCK-', '')
+        );
+
+        nextNumber = lastNumber + 1;
+        }
 
         const generatedTicketId =
-        `TCK-${String(count + 1).padStart(3, '0')}`;
+        `TCK-${String(nextNumber).padStart(3, '0')}`;
 
         const newTicket = new Ticket({
             ticketId: generatedTicketId,
@@ -57,7 +79,13 @@ export const createTicket = async (req: Request, res: Response) => {
         const savedTicket = await newTicket.save();
         res.status(201).json(savedTicket);
     } catch (error) {
-        res.status(500).json({ message: 'Error creating ticket', error });
+        //res.status(500).json({ message: 'Error creating ticket', error });
+        console.error(error);
+
+            res.status(500).json({
+            message: 'Error creating ticket',
+            error
+        });
     }
 };
 
@@ -128,7 +156,8 @@ export const getMyTickets = async (req: any, res: Response) => {
         const tickets = await Ticket.find({ assignedTo: userId })
             .populate('clientId', 'name email ')
             .populate('assignedTo', 'name email')
-            .populate('createdBy', 'name email');
+            .populate('createdBy', 'name email')
+            .populate('comments.commentAuthorId');
 
         res.status(200).json(tickets);
     
@@ -286,16 +315,36 @@ export const updateTicket = async (
   }
 };
 
-export const deleteTicket = async (req: Request, res: Response) => {
-    try {
-        const deletedTicket = await Ticket.findOneAndDelete({ ticketId: req.params.ticketId });
-        if (!deletedTicket) {
-            return res.status(404).json({ message: 'Ticket not found' });
-        }
-        res.status(200).json({ message: 'Ticket deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error deleting ticket', error });
+export const deleteTicket = async (
+  req: Request,
+  res: Response
+) => {
+
+  try {
+
+    const deletedTicket =
+      await Ticket.findOneAndDelete({
+        ticketId: req.params.ticketId
+      });
+
+    if (!deletedTicket) {
+
+      return res.status(404).json({
+        message: 'Ticket not found'
+      });
     }
+
+    res.status(200).json({
+      message: 'Ticket deleted'
+    });
+
+  } catch (error) {
+
+    res.status(500).json({
+      message: 'Error deleting ticket',
+      error
+    });
+  }
 };
 
 export const addComment = async (req: Request, res: Response) => {
@@ -317,6 +366,7 @@ export const addComment = async (req: Request, res: Response) => {
                 $push: {
                     comments: {
                         commentAuthorId: author._id,
+                        authorName,
                         text,
                         createdAt: new Date()
                     }
