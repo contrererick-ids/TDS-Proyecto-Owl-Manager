@@ -90,6 +90,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
+
   }, [token]);
 
   // ── Filtro ──
@@ -106,27 +107,43 @@ export default function UsersPage() {
     try {
 
       const response = await fetch(
-        `${API_URL}/users/delete-user/${u._id}`,
+        `${API_URL}/users/update-user/${u._id}`,
         {
-          method: 'DELETE',
+          method: 'PUT',
 
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`
           },
+
+          body: JSON.stringify({
+            isActive: !u.isActive
+          }),
         }
       );
 
       if (!response.ok) {
-        throw new Error('Error deleting user');
+        throw new Error('Error updating user');
       }
 
-      toast.success(
-        u.isActive
-          ? 'Usuario desactivado'
-          : 'Usuario activado'
+      const updatedUser =
+        await response.json();
+
+      setUsers(prev =>
+        prev.map(user =>
+          user._id === updatedUser._id
+            ? updatedUser
+            : user
+        )
       );
 
-      fetchUsers();
+      setSelected(updatedUser);
+
+      toast.success(
+        updatedUser.isActive
+          ? 'Usuario activado'
+          : 'Usuario desactivado'
+      );
 
     } catch (err) {
 
@@ -158,7 +175,7 @@ export default function UsersPage() {
         throw new Error(result.message);
       }
 
-      toast.success('Usuario creado correctamente');
+      toast.success('Usuario creado correctamente, correo enviado');
 
       fetchUsers();
 
@@ -391,12 +408,55 @@ export default function UsersPage() {
                 >
                   Editar usuario
                 </button>
+
                 <button
-                  className={selected.isActive ? 'btn-danger' : 'btn-secondary'}
+                  onClick={() => {
+
+                    if (selected) {
+                      toggleActive(selected);
+                    }
+                  }}
+                  style={{
+                    width: '100%',
+
+                    padding: '12px 16px',
+
+                    borderRadius: '12px',
+
+                    border: selected?.isActive
+                      ? '1px solid var(--border)'
+                      : '1px solid rgba(34,197,94,0.25)',
+
+                    background: selected?.isActive
+                      ? 'rgba(255,255,255,0.04)'
+                      : 'rgba(34,197,94,0.12)',
+
+                    color: selected?.isActive
+                      ? 'var(--text-primary)'
+                      : '#4ade80',
+
+                    fontWeight: 600,
+
+                    cursor: 'pointer',
+
+                    transition: 'all 0.2s ease',
+
+                    marginBottom: '12px',
+                  }}
+                >
+                  {
+                    selected?.isActive
+                      ? 'Desactivar usuario'
+                      : 'Activar usuario'
+                  }
+                </button>
+
+                <button
+                  className="btn-danger"
                   style={{ justifyContent: 'center' }}
                   onClick={() => toggleActive(selected)}
                 >
-                  {selected.isActive ? 'Desactivar usuario' : 'Activar usuario'}
+                  Eliminar usuario
                 </button>
               </div>
             )}

@@ -251,6 +251,6 @@ router.post("/add-comment/:ticketId", authenticateToken, requireRole(UserRole.AG
 
 
 
-router.put("/update-ticket/:id", authenticateToken, updateTicket);
+router.put("/update-ticket/:id", authenticateToken, requireRole(UserRole.ADMIN), updateTicket);
 
 export default router;

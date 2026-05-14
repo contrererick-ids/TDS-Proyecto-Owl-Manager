@@ -66,6 +66,8 @@ export default function TicketsPage() {
   // modal para crear ticket
   const [clients, setClients] =
   useState<any[]>([]);
+  const [agents, setAgents] =
+  useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] =
     useState(false);
   const [modalMode, setModalMode] =
@@ -74,6 +76,11 @@ export default function TicketsPage() {
     useState<ITicket | null>(null);
   const [newComment, setNewComment] =
   useState('');
+  const [assigningTicketId, setAssigningTicketId] =
+  useState<string | null>(null);
+  const [deleteModalOpen, setDeleteModalOpen] =
+  useState(false);
+
 
   // ── Fetch ──
   useEffect(() => {
@@ -112,6 +119,7 @@ export default function TicketsPage() {
     }
     fetchTickets();
     fetchClients();
+    fetchAgents();
   }, [token]);
 
   async function fetchClients() {
@@ -139,6 +147,42 @@ export default function TicketsPage() {
 
       console.error(
         'Error cargando clientes:',
+        err
+      );
+    }
+  }
+
+  async function fetchAgents() {
+
+    try {
+
+      const res = await fetch(
+        '/api/users/get-all-users',
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      const users =
+        Array.isArray(data)
+          ? data
+          : data.users ?? [];
+
+      setAgents(
+        users.filter(
+          (user: any) =>
+            user.role === 'AGENT'
+        )
+      );
+
+    } catch (err) {
+
+      console.error(
+        'Error loading agents:',
         err
       );
     }
@@ -319,8 +363,8 @@ export default function TicketsPage() {
         )
       );
 
-setSelected(formattedResult);
-      setSelected(result);
+      setSelected(formattedResult);
+        setSelected(result);
 
       setIsModalOpen(false);
 
@@ -366,18 +410,27 @@ setSelected(formattedResult);
         throw new Error(result.message);
       }
 
-      setSelected(result);
+      setSelected(prev => {
 
-      setTickets(prev =>
-        prev.map(ticket =>
-          ticket._id === result._id
-            ? result
-            : ticket
-        )
-      );
+        if (!prev) return prev;
 
-      setNewComment('');
+        return {
+          ...prev,
 
+          comments: [
+            ...prev.comments,
+            {
+              authorName:
+                authUser?.name ||
+                authUser?.username,
+
+              text: newComment,
+
+              createdAt: new Date().toISOString(),
+            }
+          ],
+        };
+      });
       toast.success('Comentario agregado');
 
     } catch (error: any) {
@@ -387,6 +440,105 @@ setSelected(formattedResult);
       );
     }
   }
+
+  async function assignAgent(
+    ticketId: string,
+    agentId: string
+  ) {
+
+    try {
+
+      const response = await fetch(
+        `/api/tickets/update-ticket/${ticketId}`,
+        {
+          method: 'PUT',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            assignedTo: agentId,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      setTickets(prev =>
+        prev.map(ticket =>
+          ticket._id === result._id
+            ? result
+            : ticket
+        )
+      );
+
+      if (selected?._id === result._id) {
+        setSelected(result);
+      }
+
+      setAssigningTicketId(null);
+
+      toast.success('Agent assigned');
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message || 'Error assigning agent'
+      );
+    }
+  }
+
+  async function handleDeleteTicket() {
+
+    if (!selected) return;
+
+    try {
+
+      const response = await fetch(
+        `/api/tickets/delete-ticket/${selected.ticketId}`,
+        {
+          method: 'DELETE',
+
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      setTickets(prev =>
+        prev.filter(
+          ticket =>
+            ticket.ticketId !== selected.ticketId
+        )
+      );
+
+      setSelected(null);
+
+      setDeleteModalOpen(false);
+
+      toast.success('Ticket deleted');
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message || 'Error deleting ticket'
+      );
+    }
+}
+
+
 
   return (
     <div className="page-root">
@@ -461,6 +613,7 @@ setSelected(formattedResult);
                     <th>Cliente</th>
                     <th>Estado</th>
                     <th>Última modificación</th>
+                    <th>Assigned</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -483,7 +636,44 @@ setSelected(formattedResult);
                           {TICKET_STATUS_LABEL[t.status]}
                         </span>
                       </td>
+
                       <td>{formatDate(t.lastModifiedDate)}</td>
+
+                      <td>
+
+                        <div className="assigned-cell">
+
+                          <span className="assigned-name">
+                            {
+                              t.assignedTo
+                                ? getName(t.assignedTo)
+                                : 'Unassigned'
+                            }
+                          </span>
+
+                          <button
+                            type="button"
+                            className="mini-assign-btn"
+                            onClick={(e) => {
+
+                              e.preventDefault();
+
+                              e.stopPropagation();
+
+                              setModalMode('assign');
+
+                              setSelectedTicket(t);
+
+                              setIsModalOpen(true);
+                            }}
+                          >
+                            Assign
+                          </button>
+
+                        </div>
+
+                      </td>
+
                     </tr>
                   ))}
                 </tbody>
@@ -521,6 +711,21 @@ setSelected(formattedResult);
                 <span className="detail-field__label">Cliente</span>
                 <span className="detail-field__value">{getName(selected.clientId)}</span>
               </div>
+              <div className="detail-group">
+
+                <span className="detail-field__label">
+                  Agente asignado
+                </span>
+
+                <p className="detail-value">
+                  {
+                    selected.assignedTo
+                      ? getName(selected.assignedTo)
+                      : 'Unassigned'
+                  }
+                </p>
+
+              </div>
               <div className="detail-field">
                 <span className="detail-field__label">Creado por</span>
                 <span className="detail-field__value">{getName(selected.createdBy)}</span>
@@ -549,7 +754,7 @@ setSelected(formattedResult);
                         border: '1px solid var(--border)',
                       }}>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>
-                          {getName(c.commentAuthorId)} · {formatDate(c.createdAt)}
+                          {getName(c.authorName)} · {formatDate(c.createdAt)}
                         </div>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{c.text}</div>
                       </div>
@@ -650,7 +855,19 @@ setSelected(formattedResult);
                     ))}
                   </select>
                   {isAdmin && (
-                    <button className="btn-danger" style={{ justifyContent: 'center' }}>
+                    <button
+                      type="button"
+                      className="btn-danger"
+                      style={{ justifyContent: 'center' }}
+                      onClick={(e) => {
+
+                        e.preventDefault();
+
+                        e.stopPropagation();
+
+                        setDeleteModalOpen(true);
+                      }}
+                    >
                       Eliminar ticket
                     </button>
                   )}
@@ -672,12 +889,118 @@ setSelected(formattedResult);
         mode={modalMode}
         initialData={selectedTicket}
         clients={clients}
+        agents={agents}
         onSubmit={
           modalMode === 'create'
             ? handleCreateTicket
             : handleEditTicket
         }
       />
+
+      {
+        deleteModalOpen && (
+
+          <div className="modal-overlay">
+
+            <div
+              className="modal-card"
+              style={{
+                maxWidth: '420px'
+              }}
+            >
+
+              <div className="modal-header">
+
+                <h2 className="modal-title">
+                  Delete Ticket
+                </h2>
+
+                <button
+                  className="modal-close"
+                  onClick={() =>
+                    setDeleteModalOpen(false)
+                  }
+                >
+                  ✕
+                </button>
+
+              </div>
+
+              <div
+                style={{
+                  padding: '10px 0 24px 0',
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.5,
+                }}
+              >
+
+                Estas seguro de querer eliminar el ticket:
+
+                <br /><br />
+
+                <strong
+                  style={{
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  {selected?.requestName}
+                </strong>
+
+                <br />
+
+                <span
+                  style={{
+                    color: 'var(--accent)',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  {selected?.ticketId}
+                </span>
+
+                <br /><br />
+
+                Esta acción es permanente.
+
+              </div>
+
+              <div
+                className="modal-footer"
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  justifyContent: 'flex-end',
+                }}
+              >
+
+                <button
+                  className="modal-secondary-button"
+                  onClick={() =>
+                    setDeleteModalOpen(false)
+                  }
+                >
+                  Cancel
+                </button>
+
+                <button
+                  className="btn-danger"
+                  onClick={() => {
+
+                      handleDeleteTicket();
+
+                    setDeleteModalOpen(false);
+                  }}
+                >
+                  Delete
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        )
+      }
+      
     </div>
   );
 }
