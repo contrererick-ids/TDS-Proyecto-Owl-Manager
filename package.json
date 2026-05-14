@@ -9,6 +9,7 @@
     "client:dev": "vite",
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
     "build": "tsc -p tsconfig.server.json && vite build",
+    "start": "node dist/server/server.js",
     "seed": "tsx src/server/seeds/createAdmin.ts"
   },
   "repository": {

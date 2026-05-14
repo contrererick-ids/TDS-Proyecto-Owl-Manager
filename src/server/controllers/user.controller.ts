@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import User from '../models/user.model';
-import Ticket from '../models/ticket.model';
-import { sendWelcomeEmail } from '../services/email.service';
+import User from '../models/user.model.js';
+import Ticket from '../models/ticket.model.js';
+import { sendWelcomeEmail } from '../services/email.service.js';
 
 export const createUser = async (req: Request, res: Response) => {
     try {

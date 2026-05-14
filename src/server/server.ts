@@ -1,6 +1,6 @@
-import httpServer from './app';
+import httpServer from './app.js';
 import dotenv from 'dotenv';
-import connectToDataBase from './config/db';
+import connectToDataBase from './config/db.js';
 
 // Cargar variable del Servidor
 dotenv.config();

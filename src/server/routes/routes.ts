@@ -1,10 +1,10 @@
 import { Router } from "express";
-import authRoutes from './auth.routes';
-import userRoutes from "./user.routes";
-import clientRoutes from "./client.routes";
-import ticketRoutes from "./ticket.routes";
-import documentRoutes from "./document.routes";
-import saleRoutes from "./sale.routes";
+import authRoutes from './auth.routes.js';
+import userRoutes from "./user.routes.js";
+import clientRoutes from "./client.routes.js";
+import ticketRoutes from "./ticket.routes.js";
+import documentRoutes from "./document.routes.js";
+import saleRoutes from "./sale.routes.js";
 
 const router = Router();
 

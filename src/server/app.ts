@@ -1,9 +1,15 @@
 import express from 'express';
 import cors from 'cors';
-import routes from './routes/routes';
+import routes from './routes/routes.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // import swagger
-import { swaggerSpec } from '../server/config/swager.config';
+import { swaggerSpec } from '../server/config/swager.config.js';
 import swaggerUi from 'swagger-ui-express';
 
 // socket.io configuration
@@ -55,5 +61,11 @@ io.on('connection', (socket) => {
 app.use('/api', routes);
 
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Servir archivos estáticos (la aplicación React)
+app.use(express.static(path.join(__dirname, '../../dist/client')));
+app.get('/{*path}', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../dist/client', 'index.html'));  
+});  
 
 export default httpServer;
