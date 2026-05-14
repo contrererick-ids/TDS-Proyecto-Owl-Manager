@@ -102,18 +102,6 @@ export const getClientByName = async (req: Request, res: Response) => {
     }
 };
 
-export const updateClient = async (req: Request, res: Response) => {
-    try {
-        const updatedClient = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updatedClient) {
-            return res.status(404).json({ message: 'Client not found' });
-        }
-        res.status(200).json(updatedClient);
-    } catch (error) {
-        res.status(500).json({ message: 'Error updating client', error });
-    }
-};
-
 export const updateClient = async ( req: Request, res: Response) => {
 
   try {
