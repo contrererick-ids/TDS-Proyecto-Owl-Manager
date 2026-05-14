@@ -25,10 +25,6 @@ export const io = new Server(httpServer, {
     cors: { origin: '*' }
 });
 
-app.get('/', (req, res) => {
-    res.send('Api works!');
-});
-
 // Middleware de CORS
 app.use(cors());
 app.use(express.json());
@@ -59,7 +55,6 @@ io.on('connection', (socket) => {
 
 // Rutas de la API
 app.use('/api', routes);
-
 app.use('/swagger', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Servir archivos estáticos (la aplicación React)
