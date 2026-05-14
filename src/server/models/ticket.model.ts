@@ -38,6 +38,9 @@ const tableTicket = new Schema({
                 ref: 'User',
                 required: true
             },
+            authorName: {
+                type: String,
+            },
             text: {
                 type: String,
                 required: true
