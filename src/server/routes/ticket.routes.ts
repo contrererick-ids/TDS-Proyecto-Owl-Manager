@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { authenticateToken } from '../middlewares/auth.middleware';
-import { requireRole } from '../middlewares/role.middleware'
-import { UserRole} from '../models/user.model'
-import { createTicket, getTickets, getTicketByTicketId, reassignTicket, updateStatus, updateTicket, deleteTicket, addComment, getMyTickets } from "../controllers/ticket.controller";
+import { authenticateToken } from '../middlewares/auth.middleware.js';
+import { requireRole } from '../middlewares/role.middleware.js';
+import { UserRole} from '../models/user.model.js';
+import { createTicket, getTickets, getTicketByTicketId, reassignTicket, updateStatus, updateTicket, deleteTicket, addComment, getMyTickets } from "../controllers/ticket.controller.js";
 
 const router = Router();
 

@@ -1,10 +1,10 @@
 // src/server/routes/document.routes.ts
 import { Router } from 'express';
-import { authenticateToken } from '../middlewares/auth.middleware';
-import { requireRole } from '../middlewares/role.middleware'
-import { UserRole } from '../models/user.model'
-import { uploadDocument, getDocumentsByEntity, downloadDocument, deleteDocument, replaceDocument } from '../controllers/document.controller';
-import { upload } from '../config/multer.config';
+import { authenticateToken } from '../middlewares/auth.middleware.js';
+import { requireRole } from '../middlewares/role.middleware.js';
+import { UserRole } from '../models/user.model.js';
+import { uploadDocument, getDocumentsByEntity, downloadDocument, deleteDocument, replaceDocument } from '../controllers/document.controller.js';
+import { upload } from '../config/multer.config.js';
 
 const router = Router();
 

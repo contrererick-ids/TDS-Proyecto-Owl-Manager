@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import jsonwebtoken from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
-import User from '../models/user.model';
+import User from '../models/user.model.js';
 
 // Lógica de autenticación
 export const login = async (req: Request, res: Response) => {
