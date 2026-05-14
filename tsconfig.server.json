@@ -4,7 +4,8 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "outDir": "./dist/server",
+    "rootDir": "./src/server",
     "composite": true
   },
-  "include": ["src/server/**/*", "src/client/services"]
+  "include": ["src/server/**/*"]
 }
