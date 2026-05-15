@@ -1,9 +1,9 @@
 import { Request, Response } from 'express';
-import Client from '../models/client.model';
-import User from '../models/user.model';
-import Ticket from '../models/ticket.model';
-import Sale from '../models/sale.model';
-import { uploadDocument } from '../controllers/document.controller'; 
+import Client from '../models/client.model.js';
+import User from '../models/user.model.js';
+import Ticket from '../models/ticket.model.js';
+import Sale from '../models/sale.model.js';
+import { uploadDocument } from '../controllers/document.controller.js'; 
 
 // Función para validar que los campos ingresados cumplan con un formato mínimo seguro
 const validateStringField = (text: string): boolean => {
