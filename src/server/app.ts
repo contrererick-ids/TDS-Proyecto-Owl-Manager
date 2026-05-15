@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // import swagger
-import { swaggerSpec } from '../server/config/swagger.config';
+import { swaggerSpec } from '../server/config/swagger.config.js';
 import swaggerUi from 'swagger-ui-express';
 
 // socket.io configuration
@@ -21,7 +21,6 @@ const app = express();
 
 const httpServer = createServer(app);
 export const io = new Server(httpServer, {
-    // allows all origins to connect to the socket.io server, later we can restrict this to specific origins for security reasons
     cors: { origin: '*' }
 });
 
