@@ -49,8 +49,8 @@ export const createClient = async (req: Request, res: Response) => {
                     file: {
                         originalname: fileName,
                         mimetype: mimeType
-                    }
-                }, res);
+                    } as any
+                } as any, res);
             }
         }
 

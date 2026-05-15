@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import Sale from "../models/sale.model";
-import Client from "../models/client.model";
+import Sale from "../models/sale.model.js";
+import Client from "../models/client.model.js";
 
 /**
  * Crear venta (F-21)

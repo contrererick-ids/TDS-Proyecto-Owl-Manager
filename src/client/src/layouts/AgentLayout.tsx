@@ -6,7 +6,7 @@ import {
   IconTickets,
   IconSales,
   IconClients,
-} from '../components/sidebar/sidebar';
+} from '../components/sidebar/Sidebar';
 
 export default function AgentLayout() {
   return (

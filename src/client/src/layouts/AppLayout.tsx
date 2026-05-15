@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom';
-import Sidebar, { NavItem } from '../components/sidebar/sidebar';
+import Sidebar, { NavItem } from '../components/sidebar/Sidebar';
 import '../../public/styles/applayout.css';
 
 interface AppLayoutProps {

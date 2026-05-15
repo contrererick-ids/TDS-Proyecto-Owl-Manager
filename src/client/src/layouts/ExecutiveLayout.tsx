@@ -8,7 +8,7 @@ import {
   IconSales,
   IconClients,
   IconUsers,
-} from '../components/sidebar/sidebar';
+} from '../components/sidebar/Sidebar';
 
 export default function ExecutiveLayout() {
   return (

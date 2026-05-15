@@ -1,8 +1,8 @@
-import { io } from '../app';
+import { io } from '../app.js';
 import { Request, Response } from 'express';
-import Ticket from '../models/ticket.model';
-import Client from '../models/client.model';
-import User from '../models/user.model';
+import Ticket from '../models/ticket.model.js';
+import Client from '../models/client.model.js';
+import User from '../models/user.model.js';
 
 const generateTicketId = async (): Promise<string> => {
     const lastTicket = await Ticket.findOne().sort({ createdAt: -1 });

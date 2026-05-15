@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
 import { PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { s3, BUCKET_NAME } from '../config/s3.config';
+import { s3, BUCKET_NAME } from '../config/s3.config.js';
 import { Types } from 'mongoose';
-import DocumentModel from '../models/document.model';
-import User from '../models/user.model';
-import Client from '../models/client.model';
-import Ticket from '../models/ticket.model';
-import Sale from '../models/sale.model';
+import DocumentModel from '../models/document.model.js';
+import User from '../models/user.model.js';
+import Client from '../models/client.model.js';
+import Ticket from '../models/ticket.model.js';
+import Sale from '../models/sale.model.js';
 
 export const uploadDocument = async (req: Request, res: Response) => {
     try {
