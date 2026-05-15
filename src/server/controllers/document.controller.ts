@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { s3, BUCKET_NAME } from '../config/s3.config.js';
+import { uploadDocumentToBucketS3 } from '../services/bucket.s3.service.js';
 import { Types } from 'mongoose';
 import DocumentModel from '../models/document.model.js';
 import User from '../models/user.model.js';
@@ -59,12 +60,10 @@ export const uploadDocument = async (req: Request, res: Response) => {
 
         const s3Key = `${entityType}s/${entityId}/${file.originalname}`;
 
-        await s3.send(new PutObjectCommand({
-            Bucket: BUCKET_NAME,
-            Key: s3Key,
-            Body: file.buffer,
-            ContentType: file.mimetype
-        }));
+        const bucketUploadResponse = await uploadDocumentToBucketS3(BUCKET_NAME,s3Key,file.buffer,file.mimetype);
+        if(!bucketUploadResponse){
+            res.status(500).json({ message: 'Error uploading documento to S3 Bucket. Document were not saved.'})
+        }
 
         const fileUrl = `https://${BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${s3Key}`;
 

@@ -1,8 +1,8 @@
 import { Router } from 'express';
-import { authenticateToken } from '../middlewares/auth.middleware';
-import { requireRole } from '../middlewares/role.middleware'
-import { UserRole } from '../models/user.model'
-import { createClient, getClients, getClientById, getClientByName, updateClient, deleteClient, assignClientToUser, toggleClientStatus } from '../controllers/client.controller';
+import { authenticateToken } from '../middlewares/auth.middleware.js';
+import { requireRole } from '../middlewares/role.middleware.js'
+import { UserRole } from '../models/user.model.js'
+import { createClient, getClients, getClientById, getClientByName, updateClient, deleteClient, assignClientToUser, toggleClientStatus } from '../controllers/client.controller.js';
 
 const router = Router();
 
