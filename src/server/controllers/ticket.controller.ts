@@ -259,65 +259,37 @@ export const updateStatus = async (req: Request, res: Response) => {
   }
 };
 
-export const updateTicket = async (
-  req: Request,
-  res: Response
-) => {
-
+export const updateTicket = async (req: Request, res: Response) => {
   try {
+    const { assignedTo, ...rest } = req.body;
+    let updateData: any = { ...rest };
 
-    const {
-      assignedTo,
-      ...rest
-    } = req.body;
-
-    let updateData: any = {
-      ...rest
-    };
-
-    // Buscar agente por nombre
     if (assignedTo) {
-
-      const user = await User.findOne({
-        name: assignedTo
-      });
-
+      const user = await User.findOne({ name: assignedTo });
       if (!user) {
-
-        return res.status(404).json({
-          message: 'Assigned user not found'
-        });
+        return res.status(404).json({ message: 'Assigned user not found' });
       }
-
       updateData.assignedTo = user._id;
     }
 
-    await Ticket.findByIdAndUpdate(
-    req.params.id,
-    updateData,
-    { new: true }
-    );
-
-    const updatedTicket =
-    await Ticket.findById(req.params.id)
-        .populate('clientId')
-        .populate('assignedTo');
+    // Busca por _id de MongoDB (lo que manda el frontend)
+    // Encadena populate directo en lugar de hacer dos queries separados
+    const updatedTicket = await Ticket.findByIdAndUpdate(
+      req.params.id,
+      { ...updateData, lastModifiedDate: new Date() },
+      { new: true }
+    )
+      .populate('clientId')
+      .populate('assignedTo');
 
     if (!updatedTicket) {
-
-      return res.status(404).json({
-        message: 'Ticket not found'
-      });
+      return res.status(404).json({ message: 'Ticket not found' });
     }
 
     res.status(200).json(updatedTicket);
 
   } catch (error) {
-
-    res.status(500).json({
-      message: 'Error updating ticket',
-      error
-    });
+    res.status(500).json({ message: 'Error updating ticket', error });
   }
 };
 

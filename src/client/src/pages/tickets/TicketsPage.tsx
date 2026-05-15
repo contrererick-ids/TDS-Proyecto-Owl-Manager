@@ -76,8 +76,6 @@ export default function TicketsPage() {
     useState<ITicket | null>(null);
   const [newComment, setNewComment] =
   useState('');
-  const [assigningTicketId, setAssigningTicketId] =
-  useState<string | null>(null);
   const [deleteModalOpen, setDeleteModalOpen] =
   useState(false);
 
@@ -200,19 +198,33 @@ export default function TicketsPage() {
     }), [tickets, search, statusFilter]);
 
   // ── Cambiar status (Agent, Admin, Executive) ──
+
+
   async function changeStatus(ticket: ITicket, newStatus: TicketStatus) {
-    try {
-      await fetch(`/api/tickets/update-status/${ticket._id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ status: newStatus }),
-      });
-      setTickets(prev => prev.map(t => t._id === ticket._id ? { ...t, status: newStatus } : t));
-      setSelected(prev => prev?._id === ticket._id ? { ...prev, status: newStatus } : prev);
-    } catch (err) {
-      console.error('Error actualizando ticket:', err);
-    }
+      try {
+          const response = await fetch(`/api/tickets/update-status/${ticket._id}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+              body: JSON.stringify({ status: newStatus }),
+          });
+
+          // Verifica antes de actualizar el estado
+          const result = await response.json();
+          if (!response.ok) {
+              toast.error(result.message || 'Error actualizando status');
+              return;
+          }
+
+          setTickets(prev => prev.map(t => t._id === ticket._id ? { ...t, status: newStatus } : t));
+          setSelected(prev => prev?._id === ticket._id ? { ...prev, status: newStatus } : prev);
+
+      } catch (err) {
+          toast.error('Error actualizando ticket');
+          console.error('Error actualizando ticket:', err);
+      }
   }
+
+
 
   // ── Reclamar ticket (Agent) ──
   async function claimTicket(
@@ -364,7 +376,6 @@ export default function TicketsPage() {
       );
 
       setSelected(formattedResult);
-        setSelected(result);
 
       setIsModalOpen(false);
 
@@ -441,58 +452,6 @@ export default function TicketsPage() {
     }
   }
 
-  async function assignAgent(
-    ticketId: string,
-    agentId: string
-  ) {
-
-    try {
-
-      const response = await fetch(
-        `/api/tickets/update-ticket/${ticketId}`,
-        {
-          method: 'PUT',
-
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-
-          body: JSON.stringify({
-            assignedTo: agentId,
-          }),
-        }
-      );
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message);
-      }
-
-      setTickets(prev =>
-        prev.map(ticket =>
-          ticket._id === result._id
-            ? result
-            : ticket
-        )
-      );
-
-      if (selected?._id === result._id) {
-        setSelected(result);
-      }
-
-      setAssigningTicketId(null);
-
-      toast.success('Agent assigned');
-
-    } catch (error: any) {
-
-      toast.error(
-        error.message || 'Error assigning agent'
-      );
-    }
-  }
 
   async function handleDeleteTicket() {
 
