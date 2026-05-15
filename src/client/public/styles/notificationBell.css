@@ -1,0 +1,226 @@
+/* ─── Contenedor ─────────────────────────────────────────────────────────── */
+.notif-bell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ─── Botón campana ──────────────────────────────────────────────────────── */
+.notif-bell__btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #a0aec0;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;
+}
+
+.notif-bell__btn:hover {
+  background: rgba(232, 168, 56, 0.12);
+  color: #E8A838;
+}
+
+/* ─── Badge contador ─────────────────────────────────────────────────────── */
+.notif-bell__badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #E8A838;
+  color: #1A2236;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* ─── Panel desplegable ──────────────────────────────────────────────────── */
+.notif-bell__panel {
+  position: absolute;
+  bottom: calc(100% + 10px); /* sube sobre el botón */
+  left: 0;
+  width: 300px;
+  max-height: 420px;
+  display: flex;
+  flex-direction: column;
+  background: #1e2a3a;
+  border: 1px solid rgba(232, 168, 56, 0.2);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  z-index: 1000;
+  animation: notif-fade-in 0.15s ease;
+}
+
+/* Cuando el sidebar está colapsado, el panel abre hacia la derecha */
+.notif-bell__panel--collapsed {
+  left: calc(100% + 12px);
+  bottom: 0;
+}
+
+@keyframes notif-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Header del panel ───────────────────────────────────────────────────── */
+.notif-bell__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.notif-bell__title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #F0EDE6;
+  letter-spacing: 0.02em;
+}
+
+.notif-bell__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.notif-bell__action-btn {
+  background: none;
+  border: none;
+  font-size: 11px;
+  font-weight: 500;
+  color: #E8A838;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.notif-bell__action-btn:hover {
+  background: rgba(232, 168, 56, 0.12);
+}
+
+.notif-bell__action-btn--danger {
+  color: #fc8181;
+}
+
+.notif-bell__action-btn--danger:hover {
+  background: rgba(252, 129, 129, 0.1);
+}
+
+/* ─── Lista de notificaciones ────────────────────────────────────────────── */
+.notif-bell__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.notif-bell__list::-webkit-scrollbar {
+  width: 4px;
+}
+.notif-bell__list::-webkit-scrollbar-thumb {
+  background: rgba(232, 168, 56, 0.25);
+  border-radius: 4px;
+}
+
+/* ─── Estado vacío ───────────────────────────────────────────────────────── */
+.notif-bell__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: #4a5568;
+  font-size: 13px;
+}
+
+/* ─── Item individual ────────────────────────────────────────────────────── */
+.notif-bell__item {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.notif-bell__item:last-child {
+  border-bottom: none;
+}
+
+.notif-bell__item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Franja amber a la izquierda para los no leídos */
+.notif-bell__item--unread {
+  background: rgba(232, 168, 56, 0.06);
+}
+
+.notif-bell__item--unread::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #E8A838;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Fila superior: ticketId + tiempo */
+.notif-bell__item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.notif-bell__ticket-id {
+  font-size: 11px;
+  font-weight: 700;
+  color: #E8A838;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.notif-bell__time {
+  font-size: 10px;
+  color: #4a5568;
+}
+
+/* Nombre del ticket */
+.notif-bell__item-name {
+  margin: 0 0 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #F0EDE6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Mensaje completo */
+.notif-bell__item-msg {
+  margin: 0;
+  font-size: 11px;
+  color: #718096;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

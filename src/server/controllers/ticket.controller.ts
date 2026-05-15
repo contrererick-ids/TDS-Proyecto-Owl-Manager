@@ -206,6 +206,9 @@ export const reassignTicket = async (req: Request, res: Response) => {
             return res.status(404).json({ message: 'Ticket not found' });
         }
 
+        console.log('[Socket] Emitiendo a userId:', assignedUser._id.toString());
+        console.log('[Socket] Salas activas:', [...io.sockets.adapter.rooms.keys()]);
+
         // Notificación en tiempo real al nuevo asignado con socket.io
         io.to(assignedUser._id.toString()).emit('ticket-asignado', {
             ticketId: updatedTicket.ticketId,

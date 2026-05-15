@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import NotificationBell from './Notificationbell';
 import '../../../public/styles/sidebar.css';
-
-// ─── Tipos ────────────────────────────────────────────────────────────────────
 
 export interface NavItem {
   to: string;
@@ -14,8 +13,6 @@ export interface NavItem {
 interface SidebarProps {
   items: NavItem[];
 }
-
-// ─── Iconos SVG inline ────────────────────────────────────────────────────────
 
 export const IconTickets = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -69,8 +66,6 @@ const IconChevron = ({ collapsed }: { collapsed: boolean }) => (
   </svg>
 );
 
-// ─── Logo del búho (versión compacta para sidebar) ────────────────────────────
-
 const OwlMini = () => (
   <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" className="sidebar__owl">
     <circle cx="20" cy="18" r="13" fill="#E8A838" opacity="0.15"/>
@@ -88,8 +83,6 @@ const OwlMini = () => (
   </svg>
 );
 
-// ─── Componente Sidebar ───────────────────────────────────────────────────────
-
 export default function Sidebar({ items }: SidebarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -100,7 +93,6 @@ export default function Sidebar({ items }: SidebarProps) {
     navigate('/login', { replace: true });
   }
 
-  // Iniciales del usuario para el avatar
   const initials = user?.name
     ? user.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
     : '??';
@@ -138,15 +130,19 @@ export default function Sidebar({ items }: SidebarProps) {
         ))}
       </ul>
 
-      {/* ── Footer: usuario + logout ── */}
+      {/* ── Footer: campana + usuario + logout ── */}
       <div className="sidebar__footer">
+
+        {/* NUEVO: campana de notificaciones */}
+        <NotificationBell collapsed={collapsed} />
+
         <div className="sidebar__user">
           <div className="sidebar__avatar">{initials}</div>
           {!collapsed && (
             <div className="sidebar__user-info">
               <span className="sidebar__user-name">{user?.name}</span>
               <span className="sidebar__user-role">
-                {user?.role ? roleLabel[user.role] : ''}
+                {user?.role ? roleLabel[user.role.toLowerCase()] : ''}
               </span>
             </div>
           )}
