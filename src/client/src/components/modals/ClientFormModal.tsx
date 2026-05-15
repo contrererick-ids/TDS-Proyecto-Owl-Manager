@@ -29,6 +29,9 @@ export default function ClientFormModal({
       initialData?.assignedTo ||
       '',
     });
+    
+    const [documents, setDocuments] = useState<File[]>([]);
+
 
   useEffect(() => {
 
@@ -44,6 +47,7 @@ export default function ClientFormModal({
                 ? initialData.assignedTo
                 : initialData.assignedTo?.name || '',
       });
+      setDocuments([]);
 
     } else {
 
@@ -54,6 +58,8 @@ export default function ClientFormModal({
         phone: '',
         assignedTo: '',
       });
+
+      setDocuments([]);
     }
 
   }, [initialData, isOpen]);
@@ -173,6 +179,76 @@ export default function ClientFormModal({
             ))}
 
           </select>
+          
+          <div className="documents-section">
+
+            <label className="documents-label">
+              Documents
+            </label>
+
+            <div className="documents-upload">
+
+              <label className="upload-button">
+
+                Choose Files
+
+                <input
+                  type="file"
+                  multiple
+                  hidden
+                  onChange={(e) => {
+
+                    if (!e.target.files) return;
+
+                    setDocuments(
+                      Array.from(e.target.files)
+                    );
+                  }}
+                />
+
+              </label>
+
+              {
+                documents.length > 0 && (
+
+                  <div className="documents-list">
+
+                    {documents.map((file, index) => (
+
+                      <div
+                        key={index}
+                        className="document-item"
+                      >
+
+                        <span className="document-name">
+                          {file.name}
+                        </span>
+
+                        <button
+                          type="button"
+                          className="remove-document"
+                          onClick={() =>
+                            setDocuments(prev =>
+                              prev.filter(
+                                (_, i) => i !== index
+                              )
+                            )
+                          }
+                        >
+                          ×
+                        </button>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+                )
+              }
+
+            </div>
+
+          </div>
 
           <div className="modal-footer">
 

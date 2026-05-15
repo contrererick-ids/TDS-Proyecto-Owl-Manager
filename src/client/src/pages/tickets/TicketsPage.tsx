@@ -635,6 +635,7 @@ export default function TicketsPage() {
                     <th>Estado</th>
                     <th>Última modificación</th>
                     <th>Asignado a:</th>
+                    <th>Documentos</th>
                       
                   </tr>
                 </thead>
@@ -695,6 +696,24 @@ export default function TicketsPage() {
 
                             </div>
 
+                          </td>
+
+                          <td>
+                            <div>
+                              <button
+                                className="table-documents-button"
+                                onClick={(e) => {
+
+                                  e.stopPropagation();
+
+                                  toast.info(
+                                    'Documents integration coming soon'
+                                  );
+                                }}
+                              >
+                                View Documents
+                              </button>
+                            </div>
                           </td>
                        
 

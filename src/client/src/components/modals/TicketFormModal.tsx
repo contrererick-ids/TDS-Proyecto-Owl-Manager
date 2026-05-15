@@ -29,6 +29,8 @@ export default function TicketFormModal({
     status: 'PENDING',
     });
 
+    const [documents, setDocuments] = useState<File[]>([]);
+
   useEffect(() => {
 
     if (initialData) {
@@ -54,6 +56,7 @@ export default function TicketFormModal({
         status:
             initialData.status || 'PENDING',
         });
+        setDocuments([]);
 
     } else {
 
@@ -64,6 +67,7 @@ export default function TicketFormModal({
             assignedTo: '',
             status: 'PENDING',
         });
+        setDocuments([]);
     }
 
   }, [initialData, isOpen]);
@@ -238,6 +242,76 @@ export default function TicketFormModal({
 
             )
           }
+
+<div className="documents-section">
+
+            <label className="documents-label">
+              Documents
+            </label>
+
+            <div className="documents-upload">
+
+              <label className="upload-button">
+
+                Choose Files
+
+                <input
+                  type="file"
+                  multiple
+                  hidden
+                  onChange={(e) => {
+
+                    if (!e.target.files) return;
+
+                    setDocuments(
+                      Array.from(e.target.files)
+                    );
+                  }}
+                />
+
+              </label>
+
+              {
+                documents.length > 0 && (
+
+                  <div className="documents-list">
+
+                    {documents.map((file, index) => (
+
+                      <div
+                        key={index}
+                        className="document-item"
+                      >
+
+                        <span className="document-name">
+                          {file.name}
+                        </span>
+
+                        <button
+                          type="button"
+                          className="remove-document"
+                          onClick={() =>
+                            setDocuments(prev =>
+                              prev.filter(
+                                (_, i) => i !== index
+                              )
+                            )
+                          }
+                        >
+                          ×
+                        </button>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+                )
+              }
+
+            </div>
+
+          </div>
 
           <div className="modal-footer">
 
