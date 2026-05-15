@@ -390,3 +390,21 @@ tbody td:first-child { color: var(--text-primary); font-weight: 500; }
   .detail-panel,
   .detail-empty  { width: 100%; }
 }
+
+.table-documents-button {
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.table-documents-button:hover {
+  background: var(--accent);
+  color: #1A2236;
+  transform: translateY(-1px);
+}

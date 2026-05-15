@@ -350,6 +350,7 @@ export default function SalesPage() {
                     <th>Registrado por</th>
                     <th>Fecha de venta</th>
                     <th>Registrado el</th>
+                    <th>Documentos</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -369,6 +370,23 @@ export default function SalesPage() {
                       <td>{getName(s.registeredBy)}</td>
                       <td>{formatDate(s.saleDate)}</td>
                       <td>{formatDate(s.createdAt)}</td>
+                      <td>
+                        <div>
+                          <button
+                            className="table-documents-button"
+                            onClick={(e) => {
+
+                              e.stopPropagation();
+
+                              toast.info(
+                                'Documents integration coming soon'
+                              );
+                            }}
+                          >
+                            View Documents
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

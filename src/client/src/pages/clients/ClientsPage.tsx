@@ -404,6 +404,7 @@ export default function ClientsPage() {
                     <th>Asignado a</th>
                     <th>Estado</th>
                     <th>Registrado</th>
+                    <th>Documentos</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -427,7 +428,25 @@ export default function ClientsPage() {
                         </span>
                       </td>
                       <td>{formatDate(c.createdAt)}</td>
+                      <td>
+                        <div>
+                          <button
+                            className="table-documents-button"
+                            onClick={(e) => {
+
+                              e.stopPropagation();
+
+                              toast.info(
+                                'Documents integration coming soon'
+                              );
+                            }}
+                          >
+                            View Documents
+                          </button>
+                        </div>
+                      </td>
                     </tr>
+
                   ))}
                 </tbody>
               </table>
