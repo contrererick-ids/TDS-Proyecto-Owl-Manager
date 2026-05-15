@@ -73,6 +73,14 @@ export default function SalesPage() {
   const [selectedSale, setSelectedSale] =
     useState<ISale | null>(null);
 
+  // modal para confirmar eliminar una venta
+  const [deleteModalOpen, setDeleteModalOpen] = 
+    useState(false);
+
+  const [saleToDelete, setSaleToDelete] = 
+    useState<ISale | null>(null);
+
+
   // ── Fetch ──
   useEffect(() => {
     async function fetchSales() {
@@ -147,20 +155,57 @@ export default function SalesPage() {
   const total = useMemo(() =>
     filtered.reduce((acc, s) => acc + s.amount, 0), [filtered]);
 
-  // ── Eliminar (solo Admin) ──
+  // ── Eliminar (solo Admin) 
+
   async function deleteSale(sale: ISale) {
-    if (!window.confirm('¿Seguro que deseas eliminar esta venta?')) return;
+
+    setSaleToDelete(sale);
+
+    setDeleteModalOpen(true);
+    console.log(saleToDelete);
+    return;
+
+  }
+
+  async function confirmDeleteSale() {
+
+    if (!saleToDelete) return;
+
     try {
-      await fetch(`/api/sales/delete-sale/${sale._id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setSales(prev => prev.filter(s => s._id !== sale._id));
+
+      await fetch(
+        `/api/sales/delete-sale/${saleToDelete._id}`,
+        {
+          method: 'DELETE',
+
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      setSales(prev =>
+        prev.filter(
+          s =>
+            s._id !== saleToDelete._id
+        )
+      );
+
       setSelected(null);
-    } catch (err) {
-      console.error('Error eliminando venta:', err);
+
+      setDeleteModalOpen(false);
+
+      setSaleToDelete(null);
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message ||
+        'Error eliminando la venta'
+      );
     }
   }
+
 
   async function handleCreateSale(
     data: any
@@ -429,6 +474,113 @@ export default function SalesPage() {
             : handleEditSale
         }
       />
+
+      {
+        deleteModalOpen && (
+
+          <div className="modal-overlay">
+
+            <div
+              className="modal-card"
+              style={{
+                maxWidth: '420px'
+              }}
+            >
+
+              <div className="modal-header">
+
+                <h2 className="modal-title">
+                  Delete Sale
+                </h2>
+
+                <button
+                  className="modal-close"
+                  onClick={() => {
+
+                    setDeleteModalOpen(false);
+
+                    setSaleToDelete(null);
+                  }}
+                >
+                  ✕
+                </button>
+
+              </div>
+
+              <div
+                style={{
+                  padding: '10px 0 24px 0',
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.5,
+                }}
+              >
+
+                Estas seguro de querer eliminar la venta:
+
+                <br /><br />
+
+                <strong
+                  style={{
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  {saleToDelete?.description ||
+                    'Venta sin descripción'}
+                </strong>
+
+                <br />
+
+                <span
+                  style={{
+                    color: 'var(--accent)',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  {saleToDelete?.amount}
+                </span>
+
+                <br /><br />
+
+                Esta acción es permanente.
+
+              </div>
+
+              <div
+                className="modal-footer"
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  justifyContent: 'flex-end',
+                }}
+              >
+
+                <button
+                  className="modal-secondary-button"
+                  onClick={() => {
+
+                    setDeleteModalOpen(false);
+
+                    setSaleToDelete(null);
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  className="btn-danger"
+                  onClick={confirmDeleteSale}
+                >
+                  Delete
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )
+      }
 
     </div>
   );

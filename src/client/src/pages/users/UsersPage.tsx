@@ -53,6 +53,9 @@ export default function UsersPage() {
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
 
+  // conectar modal advertencia de delete
+  const [deleteModalOpen, setDeleteModalOpen] =
+  useState(false);
 
   // ── Fetch ──
 
@@ -233,6 +236,46 @@ export default function UsersPage() {
       throw error;
     }
   }
+
+  async function handleDeleteUser() {
+
+    if (!selected) return;
+
+    try {
+
+      const response = await fetch(
+        `${API_URL}/users/delete-user/${selected._id}`,
+        {
+          method: 'DELETE',
+
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Error deleting user');
+      }
+
+      setUsers(prev =>
+        prev.filter(
+          user => user._id !== selected._id
+        )
+      );
+
+      setSelected(null);
+
+      toast.success('Usuario eliminado');
+
+    } catch (err) {
+
+      console.error(err);
+
+      toast.error('Error deleting user');
+    }
+  }
+
 
   return (
     <div className="page-root">
@@ -453,8 +496,10 @@ export default function UsersPage() {
 
                 <button
                   className="btn-danger"
-                  style={{ justifyContent: 'center' }}
-                  onClick={() => toggleActive(selected)}
+                  onClick={() =>
+                    setDeleteModalOpen(true)
+                  }
+                  style={{justifyContent: 'center'}}
                 >
                   Eliminar usuario
                 </button>
@@ -480,6 +525,112 @@ export default function UsersPage() {
             : handleEditUser
         }
       />
+
+      {
+        deleteModalOpen && (
+
+          <div className="modal-overlay">
+
+            <div
+              className="modal-card"
+              style={{
+                maxWidth: '420px'
+              }}
+            >
+
+              <div className="modal-header">
+
+                <h2 className="modal-title">
+                  Delete User
+                </h2>
+
+                <button
+                  className="modal-close"
+                  onClick={() =>
+                    setDeleteModalOpen(false)
+                  }
+                >
+                  ✕
+                </button>
+
+              </div>
+
+              <div
+                style={{
+                  padding: '10px 0 24px 0',
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.5,
+                }}
+              >
+
+                Estas seguro de querer eliminar al usuario:
+
+                <br /><br />
+
+                <strong
+                  style={{
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  {selected?.name}
+                </strong>
+
+                <br />
+
+                <span
+                  style={{
+                    color: 'var(--accent)',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  @{selected?.username}
+                </span>
+
+                <br /><br />
+
+                Esta acción es permanente.
+
+              </div>
+
+              <div
+                className="modal-footer"
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  justifyContent: 'flex-end',
+                }}
+              >
+
+                <button
+                  className="modal-secondary-button"
+                  onClick={() =>
+                    setDeleteModalOpen(false)
+                  }
+                >
+                  Cancel
+                </button>
+
+                <button
+                  className="btn-danger"
+                  onClick={() => {
+
+                    handleDeleteUser();
+
+                    setDeleteModalOpen(false);
+                  }}
+                >
+                  Delete
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        )
+      }
+
+
     </div>
   );
 }

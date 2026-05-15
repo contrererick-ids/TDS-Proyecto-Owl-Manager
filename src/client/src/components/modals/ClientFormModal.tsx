@@ -7,6 +7,7 @@ interface Props {
   onSubmit: (data: any) => Promise<void>;
   mode: 'create' | 'edit';
   initialData?: any;
+  executives: any[];
 }
 
 export default function ClientFormModal({
@@ -15,6 +16,7 @@ export default function ClientFormModal({
   onSubmit,
   mode,
   initialData,
+  executives,
 }: Props) {
 
     const [formData, setFormData] = useState({
@@ -22,7 +24,10 @@ export default function ClientFormModal({
     company: '',
     email: '',
     phone: '',
-    assignedTo: '',
+    assignedTo: 
+      initialData?.assignedTo?._id ||
+      initialData?.assignedTo ||
+      '',
     });
 
   useEffect(() => {
@@ -141,19 +146,33 @@ export default function ClientFormModal({
             }
           />
 
-
-          <input
-            className="modal-input"
-            placeholder="Assigned Executive Name"
+          <select
+            className="modal-select"
             value={formData.assignedTo}
             onChange={e =>
-                setFormData({
+              setFormData({
                 ...formData,
                 assignedTo: e.target.value,
-                })
+              })
             }
-            required
-           />
+          >
+
+            <option value="">
+              Elige Ejecutivo
+            </option>
+
+            {executives.map(exec => (
+
+              <option
+                key={exec._id}
+                value={exec._id}
+              >
+                {exec.name}
+              </option>
+
+            ))}
+
+          </select>
 
           <div className="modal-footer">
 

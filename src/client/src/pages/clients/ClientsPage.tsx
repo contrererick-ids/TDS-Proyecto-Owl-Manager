@@ -36,10 +36,25 @@ function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+
 function getName(ref: string | IUser | undefined): string {
+
   if (!ref) return '—';
-  if (typeof ref === 'string') return ref;
-  return (ref as IUser).name ?? '—';
+
+  if (typeof ref === 'string') {
+
+    // Detectar ObjectId Mongo
+    const isMongoId =
+      /^[a-f0-9]{24}$/i.test(ref);
+
+    if (isMongoId) {
+      return '—';
+    }
+
+    return ref;
+  }
+
+  return ref.name ?? '—';
 }
 
 // ─── Componente ───────────────────────────────────────────────────────────────
@@ -49,6 +64,7 @@ export default function ClientsPage() {
   const role    = authUser?.role?.toUpperCase();
   const isAdmin = role === 'ADMIN';
   const isAgent = role === 'AGENT';
+  const isExecutive = role === 'EXECUTIVE';
   // Executive y Admin pueden crear/editar; Agent solo consulta
 
   const [clients, setClients]   = useState<IClient[]>([]);
@@ -61,6 +77,12 @@ export default function ClientsPage() {
   const [modalMode, setModalMode] =
     useState<'create' | 'edit'>('create');
   const [selectedClient, setSelectedClient] =
+    useState<IClient | null>(null);
+  // modal executive dentro de crear cliente
+  const [executives, setExecutives] = useState<any[]>([]);
+  // eliminar cliente
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [clientToDelete, setClientToDelete] = 
     useState<IClient | null>(null);
 
   // ── Fetch ──
@@ -83,7 +105,43 @@ export default function ClientsPage() {
         setLoading(false);
       }
     }
+    
+    async function fetchExecutives() {
+      
+      try {
+        
+        const response = await fetch(
+          '/api/users/get-all-users',
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        
+        const users = await response.json();
+        
+        setExecutives(
+          users.filter(
+            (u: any) =>
+              u.role === 'EXECUTIVE'
+          )
+        );
+        
+      } catch (err) {
+        
+        console.error(
+          'Error loading executives:',
+          err
+        );
+      }
+    }
+
     fetchClients();
+    if (!isAgent) {
+      fetchExecutives();
+    }
+
   }, [token]);
 
   // ── Filtro ──
@@ -94,15 +152,15 @@ export default function ClientsPage() {
       c.email?.toLowerCase().includes(search.toLowerCase())
     ), [clients, search]);
 
-  // ── Desactivar (solo Admin) ──
+  // ── Desactivar (Admin o Executive) ──
   async function toggleActive(c: IClient) {
 
     try {
 
       const response = await fetch(
-        `/api/clients/delete-client/${c._id}`,
+        `/api/clients/toggle-client-status/${c._id}`,
         {
-          method: 'DELETE',
+          method: 'PATCH',
 
           headers: {
             Authorization: `Bearer ${token}`,
@@ -110,27 +168,43 @@ export default function ClientsPage() {
         }
       );
 
+      const result = await response.json();
+      console.log(result.assignedTo);
+
       if (!response.ok) {
-        throw new Error('Error actualizando cliente');
+        throw new Error(
+          result.message
+        );
       }
 
       setClients(prev =>
         prev.map(x =>
           x._id === c._id
-            ? { ...x, isActive: !x.isActive }
+            ? result
             : x
         )
       );
 
       setSelected(prev =>
         prev?._id === c._id
-          ? { ...prev, isActive: !prev.isActive }
+          ? result
           : prev
       );
 
-    } catch (err) {
+      toast.success(
+        `Cliente ${
+          result.isActive
+            ? 'activado'
+            : 'desactivado'
+        }`
+      );
 
-      toast.error('Error actualizando cliente:', err);
+    } catch (err: any) {
+
+      toast.error(
+        err.message ||
+        'Error actualizando cliente'
+      );
     }
   }
 
@@ -215,6 +289,62 @@ export default function ClientsPage() {
       );
     }
   }
+
+
+  async function confirmDeleteClient() {
+
+    if (!clientToDelete) return;
+
+    try {
+
+      const response = await fetch(
+        `/api/clients/delete-client/${clientToDelete._id}`,
+        {
+          method: 'DELETE',
+
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result =
+        await response.json();
+
+      if (!response.ok) {
+
+        throw new Error(
+          result.message
+        );
+      }
+
+      setClients(prev =>
+        prev.filter(
+          c =>
+            c._id !== clientToDelete._id
+        )
+      );
+
+      setSelected(null);
+
+      setDeleteModalOpen(false);
+
+      setClientToDelete(null);
+
+      toast.success(
+        'Cliente eliminado'
+      );
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message ||
+        'Error eliminando cliente'
+      );
+    }
+  }
+
+
 
   return (
     <div className="page-root">
@@ -380,15 +510,50 @@ export default function ClientsPage() {
                 >
                   Editar cliente
                 </button>
-                {isAdmin && (
+                {(isAdmin || isExecutive) && (
                   <button
-                    className={selected.isActive ? 'btn-danger' : 'btn-secondary'}
-                    style={{ justifyContent: 'center' }}
-                    onClick={() => toggleActive(selected)}
+                    className={
+                      selected.isActive
+                        ? 'btn-danger'
+                        : 'btn-secondary'
+                    }
+                    style={{
+                      justifyContent: 'center'
+                    }}
+                    onClick={() =>
+                      toggleActive(selected)
+                    }
                   >
-                    {selected.isActive ? 'Desactivar cliente' : 'Activar cliente'}
+                    {
+                      selected.isActive
+                        ? 'Desactivar cliente'
+                        : 'Activar cliente'
+                    }
                   </button>
+                  
                 )}
+
+                {isAdmin && (
+
+                  <button
+                    className="btn-danger"
+                    style={{
+                      justifyContent: 'center'
+                    }}
+                    onClick={() => {
+
+                      setClientToDelete(
+                        selected
+                      );
+
+                      setDeleteModalOpen(true);
+                    }}
+                  >
+                    Eliminar cliente
+                  </button>
+
+                )}
+
               </div>
             )}
           </aside>
@@ -401,17 +566,126 @@ export default function ClientsPage() {
 
       </div>
 
+
       <ClientFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         mode={modalMode}
         initialData={selectedClient}
+        executives={executives}
         onSubmit={
           modalMode === 'create'
             ? handleCreateClient
             : handleEditClient
         }
       />
+
+      {
+        deleteModalOpen && (
+
+          <div className="modal-overlay">
+
+            <div
+              className="modal-card"
+              style={{
+                maxWidth: '420px'
+              }}
+            >
+
+              <div className="modal-header">
+
+                <h2 className="modal-title">
+                  Delete Client
+                </h2>
+
+                <button
+                  className="modal-close"
+                  onClick={() => {
+
+                    setDeleteModalOpen(false);
+
+                    setClientToDelete(null);
+                  }}
+                >
+                  ✕
+                </button>
+
+              </div>
+
+              <div
+                style={{
+                  padding: '10px 0 24px 0',
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.5,
+                }}
+              >
+
+                Estas seguro de querer eliminar el cliente:
+
+                <br /><br />
+
+                <strong
+                  style={{
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  {clientToDelete?.name}
+                </strong>
+
+                <br />
+
+                <span
+                  style={{
+                    color: 'var(--accent)',
+                    fontSize: '0.85rem',
+                  }}
+                >
+                  {clientToDelete?.company}
+                </span>
+
+                <br /><br />
+
+                Esta acción es permanente.
+
+              </div>
+
+              <div
+                className="modal-footer"
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  justifyContent: 'flex-end',
+                }}
+              >
+
+                <button
+                  className="modal-secondary-button"
+                  onClick={() => {
+
+                    setDeleteModalOpen(false);
+
+                    setClientToDelete(null);
+                  }}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  className="btn-danger"
+                  onClick={confirmDeleteClient}
+                >
+                  Delete
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        )
+      }
+
 
     </div>
   );

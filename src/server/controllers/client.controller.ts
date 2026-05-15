@@ -1,7 +1,9 @@
 import { Request, Response } from 'express';
-import Client from '../models/client.model.js';
-import User from '../models/user.model.js';
-import { uploadDocument } from '../controllers/document.controller.js'; 
+import Client from '../models/client.model';
+import User from '../models/user.model';
+import Ticket from '../models/ticket.model';
+import Sale from '../models/sale.model';
+import { uploadDocument } from '../controllers/document.controller'; 
 
 // Función para validar que los campos ingresados cumplan con un formato mínimo seguro
 const validateStringField = (text: string): boolean => {
@@ -23,7 +25,7 @@ export const createClient = async (req: Request, res: Response) => {
         }
 
         // Buscar al usuario por nombre y validar que existe
-        const user = await User.findOne({ userId: assignedTo });
+        const user = await User.findById(assignedTo);
         if (!user) {
             return res.status(404).json({ message: `User "${assignedTo}" not found.`, error: 'User not found' });
         }
@@ -112,11 +114,15 @@ export const updateClient = async ( req: Request, res: Response) => {
     // Si viene assignedTo,
     // buscar usuario por nombre
     if (assignedTo) {
-      const user = await User.findOne({ name: assignedTo });
+      const user = await User.findById(
+        assignedTo
+        );
 
-      if (!user) {
-        return res.status(404).json({ message: 'Assigned user not found' });
-      }
+        if (!user) {
+            return res.status(404).json({
+                message:'Executive not found'
+            });
+        }
 
       updateData.assignedTo = user._id;
     }
@@ -136,15 +142,64 @@ export const updateClient = async ( req: Request, res: Response) => {
 };
 
 export const deleteClient = async (req: Request, res: Response) => {
-    try {
-        const deletedClient = await Client.findByIdAndDelete(req.params.id);
-        if (!deletedClient) {
-            return res.status(404).json({ message: 'Client not found' });
-        }
-        res.status(200).json({ message: 'Client deleted successfully' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error deleting client', error });
+  try {
+
+    const clientId = req.params.id;
+
+    // Verificar tickets asociados
+    const tickets =
+      await Ticket.find({
+        clientId
+      });
+
+    if (tickets.length > 0) {
+
+      return res.status(400).json({
+        message:
+          'Cannot delete client with assigned tickets'
+      });
     }
+
+    // Verificar ventas asociadas
+    const sales =
+      await Sale.find({
+        clientId
+      });
+
+    if (sales.length > 0) {
+
+      return res.status(400).json({
+        message:
+          'Cannot delete client with associated sales'
+      });
+    }
+
+    const deletedClient =
+      await Client.findByIdAndDelete(
+        clientId
+      );
+
+    if (!deletedClient) {
+
+      return res.status(404).json({
+        message:
+          'Client not found'
+      });
+    }
+
+    res.status(200).json({
+      message:
+        'Client deleted successfully'
+    });
+
+  } catch(error){
+
+    res.status(500).json({
+      message:
+        'Error deleting client',
+      error
+    });
+  }
 };
 
 export const assignClientToUser = async (req: Request, res: Response) => {
@@ -166,4 +221,51 @@ export const assignClientToUser = async (req: Request, res: Response) => {
     } catch (error) {
         res.status(500).json({ message: 'Error assigning client to user', error });
     }
+};
+
+export const toggleClientStatus = async (
+  req: Request,
+  res: Response
+) => {
+
+  try {
+
+    const client =
+      await Client.findById(
+        req.params.id
+      );
+
+    if (!client) {
+
+      return res.status(404).json({
+        message: 'Client not found'
+      });
+    }
+
+    client.isActive =
+      !client.isActive;
+
+    await client.save();
+
+    const updatedClient =
+      await Client.findById(
+        client._id
+      )
+      .populate(
+        'assignedTo',
+        'name email'
+      );
+
+    return res.status(200).json(
+      updatedClient
+    );
+
+  } catch (error) {
+
+    res.status(500).json({
+      message:
+        'Error changing client status',
+      error
+    });
+  }
 };

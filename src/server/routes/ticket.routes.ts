@@ -6,251 +6,353 @@ import { createTicket, getTickets, getTicketByTicketId, reassignTicket, updateSt
 
 const router = Router();
 
-// Rutas CRUD para tickets
-
 /**
  * @swagger
  * tags:
- *  - name: Tickets
- *    description: Ticket management, status tracking, and workflow control
+ *   - name: Tickets
+ *     description: Ticket management, status tracking and workflow control
  */
+
 
 /**
  * @swagger
  * /tickets/get-all-tickets:
- *  get:
- *    tags: [Tickets]
- *    summary: Get all tickets
- *    description: Returns all tickets. Results may vary depending on user role (Agent, Executive)
- *    security:
- *      - bearerAuth: []
- *    responses:
- *      200:
- *        description: List of tickets retrieved successfully
- *      401:
- *        description: Unauthorized
+ *   get:
+ *     tags: [Tickets]
+ *     summary: Get all tickets
+ *     description: Returns tickets with optional filters
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *
+ *       - in: query
+ *         name: assignedTo
+ *         schema:
+ *           type: string
+ *
+ *       - in: query
+ *         name: unassigned
+ *         schema:
+ *           type: boolean
+ *
+ *       - in: query
+ *         name: mine
+ *         schema:
+ *           type: boolean
+ *
+ *     responses:
+ *       200:
+ *         description: Tickets retrieved successfully
+ *
+ *       500:
+ *         description: Internal server error
  */
 router.get("/get-all-tickets", authenticateToken, requireRole(UserRole.AGENT), getTickets);
+
 
 /**
  * @swagger
  * /tickets/new-ticket:
- *  post:
- *    tags: [Tickets]
- *    summary: Create a new ticket
- *    description: Creates a ticket associated with a client (required)
- *    security:
- *      - bearerAuth: []
- *    requestBody:
- *      required: true
- *      content:
- *        application/json:
- *          schema:
- *            type: object
- *            required:
- *              - clientId
- *              - title
- *              - description
- *            properties:
- *              clientId:
- *                type: string
- *                example: 661a9c123abc456def789000
- *              title:
- *                type: string
- *                example: Problema con servicio
- *              description:
- *                type: string
- *                example: El cliente reporta una falla en el sistema
- *              status:
- *                type: string
- *                enum: [PENDING, IN_PROGRESS, CLOSED, CANCELED]
- *    responses:
- *      201:
- *        description: Ticket created successfully
- *      400:
- *        description: Validation error
+ *   post:
+ *     tags: [Tickets]
+ *     summary: Create ticket
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - requestName
+ *               - clientId
+ *               - createdBy
+ *
+ *             properties:
+ *               requestName:
+ *                 type: string
+ *                 example: Service request
+ *
+ *               clientId:
+ *                 type: string
+ *                 example: 661a9c123abc456def789000
+ *
+ *               assignedTo:
+ *                 type: string
+ *                 example: Juan Perez
+ *
+ *               createdBy:
+ *                 type: object
+ *
+ *     responses:
+ *       201:
+ *         description: Ticket created successfully
+ *
+ *       404:
+ *         description: Client or user not found
+ *
+ *       500:
+ *         description: Internal server error
  */
 router.post("/new-ticket", authenticateToken, requireRole(UserRole.EXECUTIVE), createTicket);
 
+
 /**
  * @swagger
- * /tickets/get-ticket/:{id}:
- *  get:
- *    tags: [Tickets]
- *    summary: Get ticket by ID
- *    description: Returns detailed information of a specific ticket
- *    security:
- *      - bearerAuth: []
- *    parameters:
- *      - in: path
- *        name: id
- *        required: true
- *        schema:
- *          type: string
- *        description: Ticket ID
- *    responses:
- *      200:
- *        description: Ticket found
- *      404:
- *        description: Ticket not found
+ * /tickets/get-ticket/{ticketId}:
+ *   get:
+ *     tags: [Tickets]
+ *     summary: Get ticket by ticket ID
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema:
+ *           type: string
+ *
+ *     responses:
+ *       200:
+ *         description: Ticket found
+ *
+ *       404:
+ *         description: Ticket not found
  */
 router.get("/get-ticket/:ticketId", authenticateToken, requireRole(UserRole.AGENT), getTicketByTicketId);
 
 
-
 /**
  * @swagger
- * /tickets/get-my-tickets/:{userId}:
- *  get:
- *    tags: [Tickets]
- *    summary: Get tickets assigned to a specific agent
- *    description: Returns all tickets assigned to the authenticated agent
- *    security:
- *      - bearerAuth: []
- *    parameters:
- *      - in: path
- *        name: userId
- *        required: true
- *        schema:
- *          type: string
- *        description: Agent user ID
- *    responses:
- *      200:
- *        description: Assigned tickets retrieved successfully
- *      401:
- *        description: Unauthorized
- *      403:
- *        description: Forbidden (Agent role required)
- *      404:
- *        description: User or tickets not found
+ * /tickets/get-my-tickets/{userId}:
+ *   get:
+ *     tags: [Tickets]
+ *     summary: Get tickets assigned to a user
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *
+ *     responses:
+ *       200:
+ *         description: Tickets retrieved successfully
+ *
+ *       404:
+ *         description: User not found
  */
 router.get("/get-my-tickets/:userId", authenticateToken, requireRole(UserRole.AGENT), getMyTickets);
 
+
 /**
  * @swagger
- * /tickets/delete-ticket/:{id}:
- *  delete:
- *    tags: [Tickets]
- *    summary: Delete or deactivate ticket
- *    description: Performs a soft delete by setting isActive to false instead of removing the ticket permanently
- *    security:
- *      - bearerAuth: []
- *    parameters:
- *      - in: path
- *        name: id
- *        required: true
- *        schema:
- *          type: string
- *        description: Ticket ID
- *    responses:
- *      200:
- *        description: Ticket deactivated successfully
- *      404:
- *        description: Ticket not found
+ * /tickets/delete-ticket/{ticketId}:
+ *   delete:
+ *     tags: [Tickets]
+ *     summary: Delete ticket
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     description: Permanently deletes a ticket
+ *
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema:
+ *           type: string
+ *
+ *     responses:
+ *       200:
+ *         description: Ticket deleted successfully
+ *
+ *       404:
+ *         description: Ticket not found
  */
 router.delete("/delete-ticket/:ticketId", authenticateToken, requireRole(UserRole.ADMIN), deleteTicket);
 
+
 /**
  * @swagger
- * /tickets/reassign-ticket/:{id}:
- *  patch:
- *    tags: [Tickets]
- *    summary: Reassign ticket
- *    description: Assigns or reassigns a ticket to another agent
- *    security:
- *      - bearerAuth: []
- *    parameters:
- *      - in: path
- *        name: id
- *        required: true
- *    requestBody:
- *      required: true
- *      content:
- *        application/json:
- *          schema:
- *            type: object
- *            required:
- *              - agentId
- *            properties:
- *              agentId:
- *                type: string
- *                example: 661a9c123abc456def789000
- *    responses:
- *      200:
- *        description: Ticket reassigned successfully
- *      404:
- *        description: Ticket or agent not found
+ * /tickets/reassign-ticket/{ticketId}:
+ *   patch:
+ *     tags: [Tickets]
+ *     summary: Reassign ticket
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema:
+ *           type: string
+ *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - assignedTo
+ *
+ *             properties:
+ *               assignedTo:
+ *                 type: string
+ *                 example: Juan Perez
+ *
+ *     responses:
+ *       200:
+ *         description: Ticket reassigned successfully
+ *
+ *       404:
+ *         description: Ticket or user not found
  */
 router.patch("/reassign-ticket/:ticketId", authenticateToken, requireRole(UserRole.AGENT), reassignTicket);
 
-/**
- * @swagger
- * /tickets/update-status/:{id}:
- *  patch:
- *    tags: [Tickets]
- *    summary: Change ticket status
- *    description: Updates the status of a ticket (Pending, In Progress, Closed, Canceled)
- *    security:
- *      - bearerAuth: []
- *    parameters:
- *      - in: path
- *        name: id
- *        required: true
- *        schema:
- *          type: string
- *    requestBody:
- *      required: true
- *      content:
- *        application/json:
- *          schema:
- *            type: object
- *            required:
- *              - status
- *            properties:
- *              status:
- *                type: string
- *                enum: [PENDING, IN_PROGRESS, CLOSED, CANCELED]
- *    responses:
- *      200:
- *        description: Status updated successfully
- *      400:
- *        description: Invalid status
- */
-router.patch("/update-status/:ticketId", authenticateToken, requireRole(UserRole.AGENT), updateStatus);
 
 /**
  * @swagger
- * /tickets/add-comment/:{id}:
- *  post:
- *    tags: [Tickets]
- *    summary: Add comment to ticket
- *    description: Adds a comment for internal tracking
- *    security:
- *      - bearerAuth: []
- *    parameters:
- *      - in: path
- *        name: id
- *        required: true
- *    requestBody:
- *      required: true
- *      content:
- *        application/json:
- *          schema:
- *            type: object
- *            required:
- *              - comment
- *            properties:
- *              comment:
- *                type: string
- *                example: Se contactó al cliente y está en revisión
- *    responses:
- *      201:
- *        description: Comment added successfully
+ * /tickets/update-status/{ticketId}:
+ *   patch:
+ *     tags: [Tickets]
+ *     summary: Update ticket status
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema:
+ *           type: string
+ *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *
+ *             required:
+ *               - status
+ *
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [PENDING, IN_PROCESS, CLOSED, CANCELED]
+ *
+ *               reason:
+ *                 type: string
+ *
+ *     responses:
+ *       200:
+ *         description: Status updated successfully
+ *
+ *       400:
+ *         description: Cancel reason required
+ *
+ *       404:
+ *         description: Ticket not found
+ */
+router.patch("/update-status/:ticketId", authenticateToken, requireRole(UserRole.AGENT), updateStatus);
+
+
+/**
+ * @swagger
+ * /tickets/add-comment/{ticketId}:
+ *   post:
+ *     tags: [Tickets]
+ *     summary: Add comment
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: ticketId
+ *         required: true
+ *         schema:
+ *           type: string
+ *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *
+ *             required:
+ *               - authorName
+ *               - text
+ *
+ *             properties:
+ *
+ *               authorName:
+ *                 type: string
+ *                 example: Juan Perez
+ *
+ *               text:
+ *                 type: string
+ *                 example: Client contacted successfully
+ *
+ *     responses:
+ *       200:
+ *         description: Comment added successfully
+ *
+ *       404:
+ *         description: User or ticket not found
  */
 router.post("/add-comment/:ticketId", authenticateToken, requireRole(UserRole.AGENT), addComment);
 
 
-
-router.put("/update-ticket/:id", authenticateToken, requireRole(UserRole.ADMIN), updateTicket);
+/**
+ * @swagger
+ * /tickets/update-ticket/{id}:
+ *   put:
+ *     tags: [Tickets]
+ *     summary: Update ticket
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *
+ *     requestBody:
+ *       required: true
+ *
+ *     responses:
+ *       200:
+ *         description: Ticket updated successfully
+ *
+ *       404:
+ *         description: Ticket not found
+ */
+router.put("/update-ticket/:id", authenticateToken, requireRole(UserRole.AGENT), updateTicket);
 
 export default router;

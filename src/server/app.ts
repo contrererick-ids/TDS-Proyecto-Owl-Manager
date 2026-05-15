@@ -9,7 +9,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // import swagger
-import { swaggerSpec } from '../server/config/swager.config.js';
+import { swaggerSpec } from '../server/config/swagger.config';
 import swaggerUi from 'swagger-ui-express';
 
 // socket.io configuration
