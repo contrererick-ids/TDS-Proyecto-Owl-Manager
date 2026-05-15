@@ -18,143 +18,235 @@ const router = Router();
 /**
  * @swagger
  * /users/get-all-users:
- *  get:
- *    tags: [Users]
- *    summary: Get all users
- *    description: Returns a list of all registered users (Admin only)
- *    responses:
- *      200:
- *        description: List of users retrieved successfully
- *      401:
- *        description: Unauthorized
- *      403:
- *        description: Forbidden (insufficient permissions)
+ *   get:
+ *     tags: [Users]
+ *     summary: Get all users
+ *     description: Returns all registered users. Accessible by EXECUTIVE and ADMIN roles.
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     responses:
+ *       200:
+ *         description: Users retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/User'
+ *
+ *       401:
+ *         description: Unauthorized
+ *
+ *       403:
+ *         description: Forbidden
+ *
+ *       500:
+ *         description: Internal server error
  */
-router.get('/get-all-users', authenticateToken, requireRole(UserRole.EXECUTIVE), getUsers);
+router.get('/get-all-users', authenticateToken, requireRole(UserRole.AGENT), getUsers);
+
 
 
 /**
  * @swagger
  * /users/create-new-user:
- *  post:
- *    tags: [Users]
- *    summary: Create a new user
- *    description: Creates a new user with a specific role (Admin only)
- *    requestBody:
- *      required: true
- *      content:
- *        application/json:
- *          schema:
- *            type: object
- *            required:
- *              - name
- *              - email
- *              - password
- *              - role
- *            properties:
- *              name:
- *                type: string
- *                example: Juan Pérez
- *              email:
- *                type: string
- *                example: juan@email.com
- *              password:
- *                type: string
- *                example: 123456
- *              role:
- *                type: string
- *                enum: [ADMIN, AGENT, EXECUTIVE]
- *    responses:
- *      201:
- *        description: User created successfully
- *      400:
- *        description: Validation error
- *      409:
- *        description: User already exists
+ *   post:
+ *     summary: Create a new user
+ *     tags: [Users]
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     description: |
+ *       Creates a new system user.
+ *       Only administrators can create users.
+ *       A welcome email is automatically sent after successful creation.
+ *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateUserRequest'
+ *
+ *     responses:
+ *       201:
+ *         description: User created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *
+ *       400:
+ *         description: Missing required fields
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *       403:
+ *         description: Forbidden
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *       409:
+ *         description: Username or email already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post('/create-new-user', authenticateToken, requireRole(UserRole.ADMIN), createUser);
 
 /**
  * @swagger
  * /users/get-user/{id}:
- *  get:
- *    tags: [Users]
- *    summary: Get user by ID
- *    description: Returns a single user by their ID
- *    parameters:
- *      - in: path
- *        name: id
- *        required: true
- *        schema:
- *          type: string
- *        description: MongoDB ObjectId of the user
- *    responses:
- *      200:
- *        description: User found
- *      400:
- *        description: Invalid ID format
- *      404:
- *        description: User not found
+ *   get:
+ *     tags: [Users]
+ *     summary: Get user by ID
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     description: Returns a specific user by MongoDB ID.
+ *
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *
+ *     responses:
+ *
+ *       200:
+ *         description: User found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *
+ *       401:
+ *         description: Unauthorized
+ *
+ *       403:
+ *         description: Forbidden
+ *
+ *       404:
+ *         description: User not found
+ *
+ *       500:
+ *         description: Internal server error
  */
 router.get('/get-user/:id', authenticateToken, requireRole(UserRole.EXECUTIVE), getUserById);
 
-/**
- * @swagger
- * /users/update-user/:{id}:
- *  put:
- *    tags: [Users]
- *    summary: Update user
- *    description: Updates user information (Admin only)
- *    parameters:
- *      - in: path
- *        name: id
- *        required: true
- *        schema:
- *          type: string
- *        description: User ID
- *    requestBody:
- *      required: true
- *      content:
- *        application/json:
- *          schema:
- *            type: object
- *            properties:
- *              name:
- *                type: string
- *              email:
- *                type: string
- *              role:
- *                type: string
- *                enum: [ADMIN, AGENT, EXECUTIVE]
- *    responses:
- *      200:
- *        description: User updated successfully
- *      400:
- *        description: Invalid data
- *      404:
- *        description: User not found
- */
-router.put('/update-user/:id', authenticateToken, requireRole(UserRole.ADMIN), updateUser);
 
 /**
  * @swagger
- * /users/delete-user/:{id}:
- *  delete:
- *    tags: [Users]
- *    summary: Delete or deactivate user
- *    description: Performs a soft delete by setting isActive to false (Admin only)
- *    parameters:
- *      - in: path
- *        name: id
- *        required: true
- *        schema:
- *          type: string
- *        description: User ID
- *    responses:
- *      200:
- *        description: User deactivated successfully
- *      404:
- *        description: User not found
+ * /users/update-user/{id}:
+ *   put:
+ *     summary: Update user information
+ *     tags: [Users]
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateUserRequest'
+ *
+ *     responses:
+ *       200:
+ *         description: User updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *
+ *       401:
+ *         description: Unauthorized
+ *
+ *       403:
+ *         description: Forbidden
+ *
+ *       404:
+ *         description: User not found
+ *
+ *       500:
+ *         description: Internal server error
+ */
+router.put('/update-user/:id', authenticateToken, requireRole(UserRole.ADMIN), updateUser);
+
+
+/**
+ * @swagger
+ * /users/delete-user/{id}:
+ *   delete:
+ *     summary: Delete user
+ *     tags: [Users]
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     description: |
+ *       Deletes a user permanently.
+ *       Users with assigned tickets cannot be deleted.
+ *
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *
+ *     responses:
+ *       200:
+ *         description: User deleted successfully
+ *
+ *       400:
+ *         description: User has assigned tickets
+ *
+ *       401:
+ *         description: Unauthorized
+ *
+ *       403:
+ *         description: Forbidden
+ *
+ *       404:
+ *         description: User not found
+ *
+ *       500:
+ *         description: Internal server error
  */
 router.delete('/delete-user/:id', authenticateToken, requireRole(UserRole.ADMIN), deleteUser);
 

@@ -1,45 +1,58 @@
 import { Router } from 'express';
 import { getUserProfile, login } from '../controllers/auth.controller';
+import { authenticateToken } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-/**
- * @swagger
+/** @swagger
  * tags:
  *   name: Auth
- *   description: Autenticación del sistema
+ *   description: Authentication and user profile management
  */
 
 /**
  * @swagger
  * /login:
  *   post:
- *     summary: Iniciar sesión
+ *     summary: Authenticate user and generate JWT token
  *     tags: [Auth]
  *     security: []
+ *
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required: [username, password]
- *             properties:
- *               username:
- *                 type: string
- *                 example: admin
- *               password:
- *                 type: string
- *                 example: 123456
+ *             $ref: '#/components/schemas/LoginRequest'
+ *
  *     responses:
  *       200:
- *         description: Login exitoso
+ *         description: Login successful
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/AuthResponse'
+ *
+ *       400:
+ *         description: Username and password are required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
  *       401:
- *         description: Credenciales inválidas
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.post("/login", login);
 
@@ -47,33 +60,49 @@ router.post("/login", login);
  * @swagger
  * /profile/{id}:
  *   get:
- *     summary: Cargar perfil de usuario
+ *     summary: Get authenticated user profile
  *     tags: [Auth]
- *     security: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [username, password]
- *             properties:
- *               username:
- *                 type: string
- *                 example: admin
- *               password:
- *                 type: string
- *                 example: 123456
+ *
+ *     security:
+ *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *
  *     responses:
  *       200:
- *         description: Perfil de usuario cargado exitosamente
+ *         description: User profile retrieved successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/AuthResponse'
+ *               $ref: '#/components/schemas/User'
+ *
  *       401:
- *         description: Error al cargar el perfil de usuario
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
  */
-router.get("/profile/:id", getUserProfile);
+router.get("/profile/:id", authenticateToken, getUserProfile);
 
 export default router;

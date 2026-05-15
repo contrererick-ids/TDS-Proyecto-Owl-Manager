@@ -153,7 +153,13 @@ export const getMyTickets = async (req: any, res: Response) => {
         }
 
         // Si el usuario existe, buscamos y respondemos con los tickets asignados a ese usuario
-        const tickets = await Ticket.find({ assignedTo: userId })
+        const tickets = await Ticket.find({
+                $or: [
+
+                    { assignedTo: userId },
+                    { assignedTo: null }
+                ]
+            })
             .populate('clientId', 'name email ')
             .populate('assignedTo', 'name email')
             .populate('createdBy', 'name email')

@@ -535,9 +535,71 @@ export default function TicketsPage() {
       toast.error(
         error.message || 'Error deleting ticket'
       );
-    }
-}
+    } 
+  }
 
+  async function handleClaimTicket(
+    ticket: any
+  ) {
+
+    try {
+
+      const response = await fetch(
+        `/api/tickets/reassign-ticket/${ticket.ticketId}`,
+        {
+          method: 'PATCH',
+
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            assignedTo: authUser?.name
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message);
+      }
+
+      const updatedTicket = {
+        ...result,
+
+        assignedTo: {
+          _id: authUser?.id,
+          name: authUser?.name
+        }
+      };
+
+      setTickets(prev =>
+        prev.map(t =>
+          t._id === updatedTicket._id
+            ? updatedTicket
+            : t
+        )
+      );
+
+      if (selected?._id === updatedTicket._id) {
+
+        setSelected(updatedTicket);
+      }
+
+      toast.success(
+        'Ticket claimed successfully'
+      );
+
+    } catch (error: any) {
+
+      toast.error(
+        error.message ||
+        'Error claiming ticket'
+      );
+    }
+  }
 
 
   return (
@@ -613,7 +675,8 @@ export default function TicketsPage() {
                     <th>Cliente</th>
                     <th>Estado</th>
                     <th>Última modificación</th>
-                    <th>Assigned</th>
+                    <th>Asignado a:</th>
+                      
                   </tr>
                 </thead>
                 <tbody>
@@ -638,41 +701,43 @@ export default function TicketsPage() {
                       </td>
 
                       <td>{formatDate(t.lastModifiedDate)}</td>
+                      
+                          <td>
 
-                      <td>
+                            <div className="assigned-cell">
 
-                        <div className="assigned-cell">
+                              <span className="assigned-name">
+                                {
+                                  t.assignedTo
+                                    ? getName(t.assignedTo)
+                                    : 'Unassigned'
+                                }
+                              </span>
 
-                          <span className="assigned-name">
-                            {
-                              t.assignedTo
-                                ? getName(t.assignedTo)
-                                : 'Unassigned'
-                            }
-                          </span>
 
-                          <button
-                            type="button"
-                            className="mini-assign-btn"
-                            onClick={(e) => {
+                              <button
+                              type="button"
+                              className="mini-assign-btn"
+                                onClick={(e) => {
 
-                              e.preventDefault();
+                                  e.preventDefault();
 
-                              e.stopPropagation();
+                                e.stopPropagation();
 
-                              setModalMode('assign');
+                                  setModalMode('assign');
 
-                              setSelectedTicket(t);
+                                  setSelectedTicket(t);
 
-                              setIsModalOpen(true);
-                            }}
-                          >
-                            Assign
-                          </button>
+                                  setIsModalOpen(true);
+                                }}
+                              >
+                                Assign
+                              </button>
 
-                        </div>
+                            </div>
 
-                      </td>
+                          </td>
+                       
 
                     </tr>
                   ))}
@@ -742,12 +807,12 @@ export default function TicketsPage() {
               </div>
 
               {/* Comentarios */}
-              {selected.comments.length > 0 && (
+              {selected.comments?.length > 0 && (
                 <>
                   <hr className="detail-panel__divider" />
                   <div className="detail-field">
                     <span className="detail-field__label">Comentarios ({selected.comments.length})</span>
-                    {selected.comments.map((c, i) => (
+                    {selected.comments?.map((c, i) => (
                       <div key={i} style={{
                         marginTop: 8, padding: '8px 10px',
                         background: 'var(--bg-input)', borderRadius: 6,
@@ -805,10 +870,39 @@ export default function TicketsPage() {
               {/* Agent: solo cambiar status y reclamar */}
               {isAgent && (
                 <>
-                  <button className="btn-secondary" style={{ justifyContent: 'center' }}
-                    onClick={() => claimTicket(selected)}>
-                    Reclamar ticket
-                  </button>
+                <div className="assign-actions">
+
+                  {
+                    isAgent &&
+                    !selected.assignedTo && (
+
+                      <button
+                        type="button"
+                        className="mini-assign-btn"
+                        style={{
+                          width: '100%',
+                          justifyContent: 'center',
+                          fontSize: '0.9rem',
+                          fontWeight: 600,
+                          marginTop: '8px',
+                        }}
+                        onClick={(e) => {
+
+                          e.preventDefault();
+
+                          e.stopPropagation();
+
+                          handleClaimTicket(selected);
+                        }}
+                      >
+                        Reclamar ticket
+                      </button>
+
+                    )
+                  }
+
+                </div>
+
                   <select
                     value={selected.status}
                     onChange={e => changeStatus(selected, e.target.value as TicketStatus)}

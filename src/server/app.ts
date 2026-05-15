@@ -3,7 +3,7 @@ import cors from 'cors';
 import routes from './routes/routes';
 
 // import swagger
-import { swaggerSpec } from '../server/config/swager.config';
+import { swaggerSpec } from '../server/config/swagger.config';
 import swaggerUi from 'swagger-ui-express';
 
 // socket.io configuration
@@ -17,10 +17,6 @@ const httpServer = createServer(app);
 export const io = new Server(httpServer, {
     // allows all origins to connect to the socket.io server, later we can restrict this to specific origins for security reasons
     cors: { origin: '*' }
-});
-
-app.get('/', (req, res) => {
-    res.send('Api works!');
 });
 
 // Middleware de CORS
